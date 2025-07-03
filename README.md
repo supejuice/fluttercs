@@ -495,6 +495,7 @@ class MyWidget extends StatelessWidget {
   - Challenges: Requires tooling for dependency management and build orchestration.
 
 > **Tip:** Start with a scalable structure early—even small apps can grow quickly. Use clear naming conventions and documentation for each module or package.
+___
 
 ### InheritedWidget
   Use for low-level dependency injection and propagating data down the widget tree. Most higher-level solutions (like Provider, Riverpod) are built on top of it.
@@ -575,9 +576,8 @@ class MyWidget extends StatelessWidget {
   **Don't:**
   - Mix unrelated features in the same folder.
   - Duplicate code across modules.
-
-### Navigation
 ___
+### Navigation
 
 - **Navigator 1.0 (Imperative):**
   - Use `Navigator.push`, `Navigator.pop` for simple navigation.
@@ -665,6 +665,88 @@ FutureBuilder<int>(
   },
 )
 ```
+
+---
+
+### Futures
+
+- **What:** Represents a computation that completes later with a value or error.
+- **Usage:** Use `async`/`await` for readable, sequential async code.
+- **Do:**
+  - Always handle errors with `try/catch` or `.catchError`.
+  - Use `await` only inside `async` functions.
+  - Chain async calls with `await` for clarity.
+- **Don't:**
+  - Block the UI thread with synchronous heavy work.
+  - Forget to handle exceptions—unhandled errors can crash the app.
+
+**Example:**
+```dart
+Future<void> loadData() async {
+  try {
+    final data = await fetchData();
+    // Use data
+  } catch (e) {
+    // Handle error
+  }
+}
+```
+
+---
+
+### Streams
+
+- **What:** Delivers a sequence of async events (data, error, done).
+- **Usage:** Use for sockets, user input, or continuous data.
+- **Do:**
+  - Use `StreamBuilder` to bind streams to widgets.
+  - Cancel subscriptions in `dispose()` to prevent memory leaks.
+  - Use `async*` and `yield` for custom stream generation.
+- **Don't:**
+  - Forget to close streams or cancel subscriptions.
+  - Use streams for one-off events—prefer `Future` instead.
+
+**Example: StreamBuilder**
+```dart
+StreamBuilder<int>(
+  stream: counterStream(),
+  builder: (context, snapshot) {
+    if (!snapshot.hasData) return CircularProgressIndicator();
+    return Text('Count: ${snapshot.data}');
+  },
+)
+```
+
+---
+
+### Isolates
+
+- **What:** Separate memory/thread for heavy computation.
+- **Usage:** Use `compute()` for simple background tasks, or `Isolate` for advanced use.
+- **Do:**
+  - Use for CPU-intensive work (parsing, encoding, image processing).
+  - Pass only simple, serializable data to isolates.
+- **Don't:**
+  - Use isolates for I/O-bound tasks (network, file)—Dart's async model handles these efficiently.
+  - Share complex objects or open connections between isolates.
+
+---
+
+### Dos and Don'ts
+
+**Do:**
+- Use `mounted` check before calling `setState` in async callbacks.
+- Dispose controllers, subscriptions, and streams in `dispose()`.
+- Use `Future.microtask` or `WidgetsBinding.instance.addPostFrameCallback` for post-build async work.
+
+**Don't:**
+- Call `setState` after a widget is disposed.
+- Start async work in `build()`—use `initState` or callbacks.
+- Ignore unawaited futures; use `unawaited()` from `package:pedantic` if intentional.
+
+---
+
+> **Tip:** Prefer `FutureBuilder`/`StreamBuilder` for simple async UI. For complex flows, consider state management solutions (Provider, Riverpod, Bloc) to handle async logic and state updates cleanly.
 
 ## Native Integration
 
