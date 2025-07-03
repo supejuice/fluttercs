@@ -2,7 +2,7 @@
 
 A comprehensive guide for Flutter development, covering fundamentals, architecture, state management, UI/UX, API integration, performance, testing, and best practices.
 
-## 🔧 Flutter Fundamentals
+## Flutter Fundamentals
 
 ### Stateless vs Stateful Widgets
 ___
@@ -142,7 +142,7 @@ extension CapExtension on String {
 
 ---
 
-## 🎨 UI/UX Design
+## UI/UX Design
 
 ### Responsive Layouts
 
@@ -241,20 +241,74 @@ Text("Hello", style: TextStyle(fontSize: 14.sp));
 
 - **Benefits**: Precise scaling, supports paddings/margins/border radii.
 
----
+### Animations
+___
 
-**Animations**
+Flutter supports both **implicit** and **explicit** animations for smooth UI transitions.
 
-- **Implicit**: `AnimatedContainer`, `AnimatedOpacity`
-- **Explicit**: `AnimationController`, `Tween`, `AnimationBuilder`
-- **Transitions**: `PageRouteBuilder`, `Hero`, `FadeTransition`, `SlideTransition`
-- **Debug**: DevTools timeline, `TickerMode`
+- **Implicit Animations**: Animate property changes automatically.
+  - Widgets: `AnimatedContainer`, `AnimatedOpacity`, `AnimatedAlign`, etc.
+  - **Do:** Use for simple transitions (size, color, opacity).
+  - **Don't:** Use for complex, multi-property, or sequenced animations.
 
----
+- **Explicit Animations**: Full control over animation timing and values.
+  - Widgets: `AnimationController`, `Tween`, `AnimatedBuilder`, `Animation`, etc.
+  - **Do:** Use for complex, coordinated, or custom animations.
+  - **Don't:** Forget to dispose your `AnimationController` to avoid memory leaks.
 
-## 🔌 API Integration
+- **Transitions**: Animate route changes or widget appearance.
+  - Widgets: `PageRouteBuilder`, `Hero`, `FadeTransition`, `SlideTransition`.
+
+- **Debug**: Use Flutter DevTools timeline, `TickerMode` to enable/disable tickers in widget subtrees.
+
+**Example: Implicit Animation with AnimatedContainer**
+```dart
+class AnimatedBox extends StatefulWidget {
+  @override
+  State<AnimatedBox> createState() => _AnimatedBoxState();
+}
+
+class _AnimatedBoxState extends State<AnimatedBox> {
+  double _size = 100;
+
+  void _toggleSize() {
+    setState(() {
+      _size = _size == 100 ? 200 : 100;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _toggleSize,
+      child: AnimatedContainer(
+        width: _size,
+        height: _size,
+        color: Colors.blue,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        child: Center(child: Text('Tap me')),
+      ),
+    );
+  }
+}
+```
+
+**Do:**
+- Use implicit widgets for simple property changes.
+- Always dispose `AnimationController` in `dispose()` when using explicit animations.
+- Use `Hero` for shared element transitions between routes.
+
+**Don't:**
+- Animate too many widgets at once; it can hurt performance.
+- Block the main thread with heavy computations during animations.
+
+> **Tip:** For advanced choreography, use `AnimationController` with `AnimatedBuilder` or `AnimatedWidget` for maximum flexibility.
+
+## API Integration
 
 ### Authorization
+___
 
 - **Access Token**: Short-lived, sent with every request, stored in memory/secure storage.
 - **Refresh Token**: Long-lived, used to get new access tokens, stored securely.
