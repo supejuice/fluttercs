@@ -46,7 +46,7 @@ ___
 > Always dispose resources in `dispose()` to prevent memory leaks.
 
 
----
+
 
 ### Keys
 
@@ -109,7 +109,7 @@ ___
     ```
   - Accessing widget state (`GlobalKey` for forms, scaffold, or navigation)
 
----
+
 
 ### Extension Methods
 
@@ -123,7 +123,7 @@ extension CapExtension on String {
 
 - **Benefits**: Improves readability, keeps utilities near relevant types.
 
----
+
 
 ### `isMounted`
 
@@ -131,7 +131,7 @@ extension CapExtension on String {
 - Prevents `setState()` after `dispose()`.
 - **Best Practice**: Check `if (mounted)` before calling `setState` in async callbacks.
 
----
+
 
 ### Localization (`l10n`)
 
@@ -140,7 +140,7 @@ extension CapExtension on String {
 - **Pluralization**: `Intl.plural(...)`
 - **Challenges**: Syncing `.arb` files, key naming, malformed JSON.
 
----
+
 
 ## UI/UX Design
 
@@ -170,7 +170,7 @@ LayoutBuilder(
 )
 ```
 
----
+
 
 **ConstrainedBox**: Set min/max constraints.
 
@@ -185,7 +185,7 @@ ConstrainedBox(
 
 **SizedBox**: Fixes width/height or acts as spacing.
 
----
+
 
 **Flexible vs Expanded**
 
@@ -203,7 +203,7 @@ Row(
 
 - To force expansion: `Flexible(flex: 2, fit: FlexFit.tight, child: ...)` or `Expanded(flex: 2, child: ...)`
 
----
+
 
 **FractionallySizedBox**: Sizes child relative to parent.
 
@@ -215,7 +215,7 @@ FractionallySizedBox(
 )
 ```
 
----
+
 
 **Sizer**: Sizing widgets as a percentage of the screen.
 
@@ -226,7 +226,7 @@ Container(height: 20.h, width: 50.w);
 
 - **Limitations**: Not pixel-perfect, limited padding/margin scaling.
 
----
+
 
 **flutter_screenutil**: Advanced scaling based on design size.
 
@@ -314,13 +314,13 @@ ___
 - **Refresh Token**: Long-lived, used to get new access tokens, stored securely.
 
 | Token Type    | Analogy                      |
-|---------------|-----------------------------|
+||--|
 | Access Token  | Room key card (limited time)|
 | Refresh Token | Passport + reissue form     |
 
 - **Separation**: Improves security, allows session rotation, scalable backend.
 
----
+
 
 **Login Endpoint**
 
@@ -333,13 +333,13 @@ ___
 **Token Structure**
 
 | Property         | Access Token        | Refresh Token                |
-|------------------|--------------------|------------------------------|
+||--||
 | Format           | JWT or opaque      | Opaque (preferred)           |
 | Storage          | Memory/secure      | Secure only                  |
 | Contains         | Claims             | UUID only                    |
 | Signed           | Yes                | Preferably yes               |
 
----
+
 
 ### Networking
 
@@ -644,7 +644,7 @@ ___
 
 > **Tip:** For most apps, start with Navigator 1.0 for simplicity. Migrate to Navigator 2.0 or a package like `go_router` as navigation needs grow.
 
----
+
 
 ## Async Programming
 
@@ -666,7 +666,7 @@ FutureBuilder<int>(
 )
 ```
 
----
+
 
 ### Futures
 
@@ -692,7 +692,7 @@ Future<void> loadData() async {
 }
 ```
 
----
+
 
 ### Streams
 
@@ -717,7 +717,7 @@ StreamBuilder<int>(
 )
 ```
 
----
+
 
 ### Isolates
 
@@ -730,7 +730,7 @@ StreamBuilder<int>(
   - Use isolates for I/O-bound tasks (network, file)—Dart's async model handles these efficiently.
   - Share complex objects or open connections between isolates.
 
----
+
 
 ### Dos and Don'ts
 
@@ -744,7 +744,7 @@ StreamBuilder<int>(
 - Start async work in `build()`—use `initState` or callbacks.
 - Ignore unawaited futures; use `unawaited()` from `package:pedantic` if intentional.
 
----
+
 
 > **Tip:** Prefer `FutureBuilder`/`StreamBuilder` for simple async UI. For complex flows, consider state management solutions (Provider, Riverpod, Bloc) to handle async logic and state updates cleanly.
 
@@ -939,7 +939,7 @@ Flutter provides a rich set of profiling tools to help you analyze, debug, and o
 **Connect:**  
 - Use the link printed in the console, or connect via your IDE.
 
----
+
 
 ### 2. DevTools Tabs and Profiling Techniques
 
@@ -963,7 +963,7 @@ Flutter provides a rich set of profiling tools to help you analyze, debug, and o
 - Interact with your app to reproduce issues.
 - Stop recording and analyze the timeline.
 
----
+
 
 #### **b. Memory Tab**
 
@@ -981,7 +981,7 @@ Flutter provides a rich set of profiling tools to help you analyze, debug, and o
 - Take snapshots before and after navigation or heavy operations.
 - Look for unexpected growth in object counts.
 
----
+
 
 #### **c. CPU Profiler Tab**
 
@@ -991,7 +991,7 @@ Flutter provides a rich set of profiling tools to help you analyze, debug, and o
 - **Profile Recording:**  
   - Start/stop CPU profiling for specific actions.
 
----
+
 
 #### **d. Network Tab**
 
@@ -1003,7 +1003,7 @@ Flutter provides a rich set of profiling tools to help you analyze, debug, and o
   - Debug slow or failed network calls.
   - Analyze payload sizes and response times.
 
----
+
 
 #### **e. Inspector Tab**
 
@@ -1016,7 +1016,7 @@ Flutter provides a rich set of profiling tools to help you analyze, debug, and o
 - **Use:**  
   - Debug layout issues, excessive rebuilds, and widget structure.
 
----
+
 
 #### **f. Logging Tab**
 
@@ -1025,7 +1025,7 @@ Flutter provides a rich set of profiling tools to help you analyze, debug, and o
 - **Filtering:**  
   - Filter logs by level or content.
 
----
+
 
 #### **g. App Size Tab**
 
@@ -1036,14 +1036,12 @@ Flutter provides a rich set of profiling tools to help you analyze, debug, and o
 - **Use:**  
   - Identify and reduce bloat.
 
----
 
 #### **h. Provider/Bloc/Riverpod Tabs (if using)**
 
 - **State Management:**  
   - Inspect provider/bloc/riverpod state, dependencies, and updates.
 
----
 
 ### 3. Additional Profiling Techniques
 
@@ -1060,7 +1058,7 @@ Flutter provides a rich set of profiling tools to help you analyze, debug, and o
 - **Tracing:**  
   - Use `Timeline` API for custom event tracing.
 
----
+
 
 ### 4. Best Practices
 
