@@ -336,8 +336,6 @@ class MyWidget extends StatelessWidget {
 - Minimize heavy work in `initState`. For expensive initialization, use `FutureBuilder` or deferred loading.
 - Optimize asset sizes and use compressed images.
 
----
-
 ## Flutter Architecture
 
 - Use `InheritedWidget` for low-level dependency injection. Most state management solutions (like Provider) build on this.
@@ -348,7 +346,6 @@ class MyWidget extends StatelessWidget {
   - Navigator 2.0: Declarative, supports deep linking and complex flows. Use packages like `go_router`.
 
 **Example: go_router setup**
-
 ```dart
 final router = GoRouter(
   routes: [
@@ -360,15 +357,12 @@ final router = GoRouter(
 );
 ```
 
----
-
 ## Async Programming
 
 - Use `Future` for single async results, `Stream` for multiple events.
 - Bind async data to UI with `FutureBuilder` and `StreamBuilder`.
 
 **Example: FutureBuilder**
-
 ```dart
 FutureBuilder<int>(
   future: fetchValue(),
@@ -383,8 +377,6 @@ FutureBuilder<int>(
 )
 ```
 
----
-
 ## Native Integration
 
 - Use `MethodChannel` to call platform-specific code (Android/iOS) from Dart.
@@ -393,7 +385,6 @@ FutureBuilder<int>(
 - Handle permissions and platform-specific testing carefully.
 
 **Example: MethodChannel**
-
 ```dart
 static const platform = MethodChannel('samples.flutter.dev/battery');
 
@@ -402,8 +393,6 @@ Future<void> getBatteryLevel() async {
 }
 ```
 
----
-
 ## Error Handling
 
 - Wrap async code in `try/catch` blocks.
@@ -411,7 +400,6 @@ Future<void> getBatteryLevel() async {
 - Show errors to users with `SnackBar`, dialogs, or dedicated error screens.
 
 **Example: try/catch**
-
 ```dart
 try {
   final data = await fetchData();
@@ -420,8 +408,6 @@ try {
 }
 ```
 
----
-
 ## Dependency Injection
 
 - Use GetIt for service locator pattern, Provider or Riverpod for scoped dependency injection.
@@ -429,13 +415,10 @@ try {
 - Use `MultiProvider` or `ProviderScope` for grouping dependencies.
 
 **Example: GetIt registration**
-
 ```dart
 final getIt = GetIt.instance;
 getIt.registerSingleton<ApiService>(ApiServiceImpl());
 ```
-
----
 
 ## Localization and Accessibility
 
@@ -443,15 +426,12 @@ getIt.registerSingleton<ApiService>(ApiServiceImpl());
 - For accessibility, use the `Semantics` widget, label images, avoid hardcoded sizes, and test with screen readers.
 
 **Example: Semantics**
-
 ```dart
 Semantics(
   label: 'Play button',
   child: Icon(Icons.play_arrow),
 )
 ```
-
----
 
 ## Testing and Quality
 
@@ -461,7 +441,6 @@ Semantics(
 - Enforce static analysis with `flutter analyze` and custom lint rules.
 
 **Example: Widget test**
-
 ```dart
 testWidgets('Counter increments', (tester) async {
   await tester.pumpWidget(MyApp());
@@ -470,122 +449,3 @@ testWidgets('Counter increments', (tester) async {
   expect(find.text('1'), findsOneWidget);
 });
 ```
-
----
-
-## Flutter Packages
-
-- Commonly used: `flutter_svg`, `fl_chart`, `cached_network_image`, `riverpod`, `go_router`, `get_it`.
-- Evaluate packages for maintenance, community support, and license.
-
----
-
-## Version Control and Environments
-
-- Use Git with branching strategies (e.g., GitFlow, trunk-based).
-- Use semantic commit messages (`feat:`, `fix:`).
-- Manage environments with `.env` files, `flutter_dotenv`, and build flavors.
-
----
-
-## Dart Language Proficiency
-
-- Use null safety, type inference, extension methods, `late`, `required`, and mixins.
-- Handle errors with `try/catch` and custom exceptions.
-- Optimize performance by avoiding unnecessary allocations and using unmodifiable collections.
-
----
-
-## Problem Solving
-
-- Practice with algorithm problems (e.g., Valid Parentheses, LRU Cache) to improve coding skills.
-
----
-
-## Architecture and Framework
-
-- Choose state management based on team experience and app complexity.
-- Use dependency injection for testability and modularity.
-- Profile and optimize performance with DevTools.
-- Use implicit animations for simple cases, explicit for complex.
-
----
-
-## Testing and Quality (Summary)
-
-- Aim for a mix of unit, widget, and integration tests.
-- Use mocks for API testing.
-- Enforce code quality with static analysis and CI.
-
----
-
-## Project Experience
-
-- Modularize large projects, use GoRouter for navigation, and manage environment configs with `flutter_dotenv` or build flavors.
-
----
-
-## CI/CD and Deployment
-
-- Automate builds and tests with CI/CD tools.
-- Use semantic versioning and automate store submissions.
-
----
-
-## Leadership and Management
-
-- Structure teams by feature or layer.
-- Use documentation and code reviews to onboard and grow team members.
-
----
-
-## Dev Practices
-
-- Focus code reviews on readability, performance, and test coverage.
-- Use formatters, custom lint rules, and pre-commit hooks.
-- Track and prioritize technical debt.
-
----
-
-## Problem Solving (Debugging)
-
-- Use DevTools and `debugProfileBuildsEnabled` for profiling.
-- Read source code and build proof-of-concepts when documentation is limited.
-
----
-
-## Architecture Decisions
-
-- Prefer scoped state management (e.g., Riverpod with hooks).
-- Modularize routing and share domain/data logic across platforms.
-
----
-
-## Technical Deep Dives
-
-- Example: Shopping cart with Riverpod Notifier, persisted in SharedPreferences or SQLite.
-- Use `MethodChannel` for native features.
-- Build shared component libraries for consistent UI.
-
----
-
-## Trends and Vision
-
-- Stay updated with Flutter releases and community resources.
-- Watch for upcoming features like Dart macros and WebAssembly support.
-
----
-
-## Situational Handling
-
-- Balance quality and speed by planning for refactoring.
-- Refactor legacy code incrementally and add tests.
-
----
-
-## Bonus Practice Links
-
-- [Valid Parentheses](https://leetcode.com/problems/valid-parentheses/)
-- [Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters/)
-- [LRU Cache](https://leetcode.com/problems/lru-cache/)
-- [Grade Calculator](https://www.rapidtables.com/calc/grade/test-calculator.html)
