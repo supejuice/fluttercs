@@ -459,25 +459,192 @@ class MyWidget extends StatelessWidget {
 - Optimize asset sizes and use compressed images.
 
 ## Flutter Architecture
+### Scalability Patterns
 
-- Use `InheritedWidget` for low-level dependency injection. Most state management solutions (like Provider) build on this.
-- Common patterns: MVVM (with Provider or Riverpod), Clean Architecture (separating domain, data, and presentation layers).
-- Modularize code by features or layers. Extract shared UI components and utilities into separate packages.
-- Navigation:
-  - Navigator 1.0: Imperative, push/pop routes.
-  - Navigator 2.0: Declarative, supports deep linking and complex flows. Use packages like `go_router`.
+- **Feature-First vs. Layer-First**
+  - *Feature-First*: Organize code by features (e.g., `/features/auth/`, `/features/profile/`). Improves modularity, makes onboarding easier, and supports parallel development.
+    - **Do:** Use feature-first for large or growing apps.
+    - **Do:** Keep feature folders self-contained (UI, logic, models).
+    - **Don't:** Mix unrelated features in the same folder.
+  - *Layer-First*: Organize by technical layers (e.g., `/models/`, `/views/`, `/services/`). Can lead to cross-feature dependencies and harder navigation in large codebases.
+    - **Do:** Use for small apps or when layers are minimal.
+    - **Don't:** Let layers become dumping grounds for unrelated code.
+  - **Recommendation:** Prefer feature-first for large apps; combine with layer separation inside each feature.
 
-**Example: go_router setup**
-```dart
-final router = GoRouter(
-  routes: [
-    GoRoute(
-      path: '/home',
-      builder: (context, state) => HomePage(),
-    ),
-  ],
-);
-```
+- **Modularization**
+  - Split code into independent modules/packages (e.g., `core`, `shared`, `feature_x`).
+    - **Do:** Extract shared UI components, utilities, and services into their own modules.
+    - **Do:** Use Dart/Flutter packages for isolation and reusability.
+    - **Don't:** Over-modularize prematurely; start with clear boundaries.
+    - **Don't:** Create circular dependencies between modules.
+
+- **Package Splitting**
+  - Move reusable features or libraries into separate packages (local or published).
+    - **Do:** Use `path` or `git` dependencies in `pubspec.yaml` for local development.
+    - **Do:** Write independent tests for each package.
+    - **Don't:** Duplicate code across packages.
+    - **Don't:** Expose internal implementation details in package APIs.
+
+- **Monorepo Strategies**
+  - Store all app packages and modules in a single repository.
+    - **Do:** Use tools like [Melos](https://melos.invertase.dev/) for managing packages, scripts, and versioning.
+    - **Do:** Set up shared CI/CD pipelines for all packages.
+    - **Don't:** Ignore dependency version mismatches between packages.
+    - **Don't:** Commit breaking changes without coordinating across affected packages.
+  - Benefits: Easier refactoring, atomic commits across packages, shared CI/CD.
+  - Challenges: Requires tooling for dependency management and build orchestration.
+
+> **Tip:** Start with a scalable structure early—even small apps can grow quickly. Use clear naming conventions and documentation for each module or package.
+
+### InheritedWidget
+  Use for low-level dependency injection and propagating data down the widget tree. Most higher-level solutions (like Provider, Riverpod) are built on top of it.
+
+  **Example: Custom InheritedWidget**
+  ```dart
+  class CounterData extends InheritedWidget {
+    final int counter;
+    final Widget child;
+
+    CounterData({required this.counter, required this.child}) : super(child: child);
+
+    static CounterData? of(BuildContext context) =>
+        context.dependOnInheritedWidgetOfExactType<CounterData>();
+
+    @override
+    bool updateShouldNotify(CounterData oldWidget) => counter != oldWidget.counter;
+  }
+
+  // Usage in widget tree:
+  CounterData(
+    counter: 5,
+    child: MyHomePage(),
+  );
+  ```
+
+  **Do:**
+  - Use for propagating immutable data or callbacks.
+  - Use `of(context)` pattern for access.
+
+  **Don't:**
+  - Use for complex or deeply nested state; prefer higher-level solutions.
+
+- **Common Patterns:**
+  - **MVVM**: Use with Provider or Riverpod for separating UI (View), logic (ViewModel), and data.
+  - **Clean Architecture**: Separate domain, data, and presentation layers for testability and scalability.
+
+  **Example: Provider (MVVM)**
+  ```dart
+  class CounterViewModel extends ChangeNotifier {
+    int _count = 0;
+    int get count => _count;
+
+    void increment() {
+      _count++;
+      notifyListeners();
+    }
+  }
+
+  // In main.dart
+  ChangeNotifierProvider(
+    create: (_) => CounterViewModel(),
+    child: MyApp(),
+  );
+
+  // In widget
+  Consumer<CounterViewModel>(
+    builder: (context, vm, child) => Text('${vm.count}'),
+  );
+  ```
+
+  **Do:**
+  - Use Provider/Riverpod for scalable, testable state management.
+  - Keep business logic out of widgets.
+
+  **Don't:**
+  - Mutate state directly in widgets.
+  - Overuse global state; prefer scoped providers.
+
+- **Modularization:**
+  - Organize code by features or layers.
+  - Extract shared UI components, utilities, and services into separate packages or modules.
+
+  **Do:**
+  - Use feature-first structure for large apps.
+  - Keep shared code in `core` or `shared` packages.
+
+  **Don't:**
+  - Mix unrelated features in the same folder.
+  - Duplicate code across modules.
+
+### Navigation
+___
+
+- **Navigator 1.0 (Imperative):**
+  - Use `Navigator.push`, `Navigator.pop` for simple navigation.
+  - Good for small apps or simple flows.
+
+  **Example:**
+  ```dart
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => DetailsPage()),
+  );
+  Navigator.pop(context);
+  ```
+
+  **Do:**
+  - Use for straightforward navigation stacks.
+
+  **Don't:**
+  - Use for deep linking or complex flows.
+
+- **Navigator 2.0 (Declarative):**
+  - Supports deep linking, browser history, and complex navigation.
+  - Use packages like `go_router` or `auto_route` for easier setup.
+
+  **Example: go_router Setup**
+  ```dart
+  final router = GoRouter(
+    routes: [
+      GoRoute(
+        path: '/home',
+        builder: (context, state) => HomePage(),
+      ),
+      GoRoute(
+        path: '/details/:id',
+        builder: (context, state) {
+          final id = state.params['id'];
+          return DetailsPage(id: id);
+        },
+      ),
+    ],
+    errorBuilder: (context, state) => NotFoundPage(),
+    redirect: (context, state) {
+      // Example: Redirect unauthenticated users
+      final loggedIn = checkAuth();
+      if (!loggedIn && state.location != '/login') return '/login';
+      return null;
+    },
+  );
+
+  // In MaterialApp.router
+  MaterialApp.router(
+    routerConfig: router,
+  );
+  ```
+
+  **Do:**
+  - Use for apps requiring deep linking, web support, or complex navigation.
+  - Handle unknown routes and errors gracefully.
+  - Use route guards/redirects for authentication flows.
+
+  **Don't:**
+  - Mix imperative and declarative navigation in the same flow.
+  - Forget to test navigation on web and mobile.
+
+> **Tip:** For most apps, start with Navigator 1.0 for simplicity. Migrate to Navigator 2.0 or a package like `go_router` as navigation needs grow.
+
+---
 
 ## Async Programming
 
