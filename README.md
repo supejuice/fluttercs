@@ -108,11 +108,141 @@ extension CapExtension on String {
 
 ### Responsive Layouts
 
-* `LayoutBuilder`, `MediaQuery`, `FractionallySizedBox`, `Flexible`.
-* `flutter_screenutil`, `responsive_builder`, `sizer`.
-* Adaptive layouts for tablets and phones.
+- Use layout widgets: `LayoutBuilder`, `MediaQuery`, `FractionallySizedBox`, `Flexible`.
+- Responsive packages: `flutter_screenutil`, `responsive_builder`, `sizer`.
+- Design adaptive layouts for tablets and phones.
 
-### Animations
+---
+
+**MediaQuery rebuilds:**  
+A widget only rebuilds when it reads an inherited widget (like `MediaQuery`) in its build method *and* that data changes (e.g., screen resize, orientation). If you don’t read `MediaQuery`, your widget won’t rebuild on size changes.
+
+**Example: Responsive Grid with `LayoutBuilder`**
+```dart
+LayoutBuilder(
+  builder: (context, constraints) {
+    int columns = 1;
+    if (constraints.maxWidth >= 1200) {
+      columns = 4;
+    } else if (constraints.maxWidth >= 800) {
+      columns = 3;
+    } else if (constraints.maxWidth >= 600) {
+      columns = 2;
+    }
+    return GridView.count(
+      crossAxisCount: columns,
+      children: List.generate(20, (index) => Card(child: Text('Item $index'))),
+    );
+  },
+)
+```
+
+---
+
+**ConstrainedBox**  
+Lets you set min/max constraints (not just fixed width/height):
+```dart
+ConstrainedBox(
+  constraints: BoxConstraints(
+    minWidth: 100,
+    maxWidth: 200,
+    minHeight: 50,
+    maxHeight: 100,
+  ),
+  child: YourWidget(),
+)
+```
+Or use `BoxConstraints.tightFor` for fixed size:
+```dart
+ConstrainedBox(
+  constraints: BoxConstraints.tightFor(height: 20),
+);
+```
+
+**SizedBox**  
+- Fixes width/height or acts as spacing (when no child).
+
+---
+
+**Flexible vs Expanded**
+- `Expanded(child: ...)` is shorthand for `Flexible(fit: FlexFit.tight, child: ...)`.
+- `Flexible(flex: 2, child: ...)` by default uses `FlexFit.loose`:
+  - The child can take up to 2 parts of available space, but only uses what it needs.
+
+**Example:**
+```dart
+Row(
+  children: [
+    Flexible(flex: 1, child: Text("Short")),
+    Flexible(flex: 2, child: Container(width: 50, color: Colors.red)),
+  ],
+);
+```
+- Here, the `Text` stays small, and the `Container` is 50 pixels wide, not double the space, because of `FlexFit.loose`.
+
+**To force expansion with flex:**  
+Use `Flexible(flex: 2, fit: FlexFit.tight, child: ...)`  
+or simply:  
+`Expanded(flex: 2, child: ...)`
+**FractionallySizedBox**
+
+A core Flutter widget that sizes its child relative to its parent using `widthFactor` and `heightFactor`.
+
+**Syntax:**
+```dart
+FractionallySizedBox(
+  widthFactor: 0.8,  // 80% of parent width
+  heightFactor: 0.5, // 50% of parent height
+  child: YourWidget(),
+)
+```
+
+---
+
+**sizer**
+
+A simple package for sizing widgets as a percentage of the screen.
+
+- Extensions: `.w`, `.h`, `.sp`
+
+**Example:**
+```dart
+Text('Hello', style: TextStyle(fontSize: 12.sp));
+Container(height: 20.h, width: 50.w);
+```
+
+**Limitations:**
+
+- Does not guarantee pixel-perfect scaling to match original designs
+- Limited control over padding and margin scaling
+- Not a full "design-to-device" adaptation solution
+
+---
+
+**flutter_screenutil**
+
+A more advanced package for scaling UI based on a specific design reference size.
+
+**Usage:**
+```dart
+ScreenUtilInit(
+  designSize: Size(360, 690),
+  builder: () => MyApp(),
+)
+```
+Use `.w`, `.h`, `.r`, `.sp` for scaling:
+```dart
+Container(width: 100.w, height: 50.h); // based on 360x690 design
+Text("Hello", style: TextStyle(fontSize: 14.sp));
+```
+
+**Benefits:**
+
+- Maintains UI fidelity across devices with precise scaling
+- Scales paddings, margins, and border radii using `.r`
+- Provides fallback defaults and device detection
+
+**Animations**
 
 * **Implicit**: `AnimatedContainer`, `AnimatedOpacity`
 * **Explicit**: `AnimationController`, `Tween`, `AnimationBuilder`
