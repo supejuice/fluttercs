@@ -2,29 +2,112 @@
 
 A comprehensive guide for Flutter development, covering fundamentals, architecture, state management, UI/UX, API integration, performance, testing, and best practices.
 
----
-
 ## 🔧 Flutter Fundamentals
 
 ### Stateless vs Stateful Widgets
-
+___
 - **StatelessWidget**: Immutable, UI does not depend on state changes. Rebuilds only when parent changes.  
   _Example_: Static content (splash screen, about page).
 - **StatefulWidget**: Mutable via `State` class, UI depends on dynamic data. Lifecycle methods: `initState`, `didUpdateWidget`, `dispose`.  
   _Example_: Forms, toggles, dynamic content.
 
-> **Tip:** Choose based on content dynamicity and interaction needs.
+#### Widget Lifecycles
+
+- **StatelessWidget**:
+  - `build()`: Called when the widget is inserted into the tree or when its parent rebuilds.
+
+- **StatefulWidget**:
+  - `createState()`: Creates the mutable state object.
+  - `initState()`: Called once when the state is created. Initialize data, subscribe to streams.
+    - **Do:** Initialize controllers, listeners, or fetch initial data here.
+    - **Don't:** Call `BuildContext`-dependent methods (like `showDialog`) directly in `initState`.
+  - `didChangeDependencies()`: Called after `initState` and when dependencies change (e.g., `InheritedWidget` updates).
+    - **Do:** Use for actions that depend on inherited widgets (like `Theme.of(context)`).
+    - **Don't:** Perform heavy work here; it may be called multiple times.
+  - `build()`: Called whenever the widget needs to be rendered.
+    - **Do:** Keep build methods fast and side-effect free.
+    - **Don't:** Start async operations or mutate state directly in `build()`.
+  - `didUpdateWidget()`: Called when the parent widget changes and needs to update the state.
+    - **Do:** Compare old and new widget properties to react to changes.
+    - **Don't:** Forget to call `super.didUpdateWidget(oldWidget)`.
+  - `setState()`: Triggers a rebuild by marking the widget as dirty.
+    - **Do:** Only call when the widget is mounted and you need to update the UI.
+    - **Don't:** Call after `dispose()` or in synchronous loops.
+  - `deactivate()`: Called when the widget is removed from the tree temporarily.
+    - **Do:** Pause animations or listeners if needed.
+    - **Don't:** Dispose resources here; use `dispose()` instead.
+  - `dispose()`: Called when the state object is permanently removed. Clean up controllers, listeners, etc.
+    - **Do:** Cancel timers, close streams, and dispose controllers.
+    - **Don't:** Call `setState()` here.
+
+> **Tip:** Always pair resource allocation (controllers, streams) in `initState` with cleanup in `dispose()` to prevent memory leaks.
+
+> **Tip:** Choose based on content dynamicity and interaction needs.  
+> Always dispose resources in `dispose()` to prevent memory leaks.
+
 
 ---
 
 ### Keys
 
-- **Purpose**: Retain widget identity across rebuilds.
-- **Types**: `Key`, `ValueKey`, `ObjectKey`, `UniqueKey`, `GlobalKey`.
-- **Use Cases**:  
-  - Optimizing `ListView` performance  
-  - Maintaining state during item reordering  
-  - Accessing widget state (`GlobalKey` for forms)
+- **Purpose**: Retain widget identity across rebuilds, ensuring correct state and UI updates.
+
+- **Types & Usage**:
+  - `Key`: Base class, rarely used directly.
+  - `ValueKey`: Use when you have a unique value (like an ID) for each widget, e.g., in lists with stable identifiers.
+    ```dart
+    ListView(
+      children: items.map((item) => ListTile(
+        key: ValueKey(item.id),
+        title: Text(item.name),
+      )).toList(),
+    )
+    ```
+  - `ObjectKey`: Use when the identity of an object instance matters (e.g., model objects).
+    ```dart
+    ListView(
+      children: models.map((model) => MyWidget(key: ObjectKey(model), model: model)).toList(),
+    )
+    ```
+  - `UniqueKey`: Generates a unique key every time; use for widgets that must always be treated as new.
+    ```dart
+    ListView(
+      children: List.generate(3, (i) => Container(key: UniqueKey())),
+    )
+    ```
+  - `GlobalKey`: Allows access to widget state and context across the widget tree; use for forms, scaffold, or when you need to call methods on a widget from outside its build context.
+    ```dart
+    final formKey = GlobalKey<FormState>();
+    Form(key: formKey, child: ...);
+    formKey.currentState?.validate();
+    ```
+
+- **Navigator Key**:  
+  - A special `GlobalKey<NavigatorState>` used to control navigation from outside the widget tree (e.g., in services or BLoC).
+    ```dart
+    final navigatorKey = GlobalKey<NavigatorState>();
+    MaterialApp(navigatorKey: navigatorKey, ...);
+    navigatorKey.currentState?.pushNamed('/home');
+    ```
+
+- **When Not to Use Keys**:
+  - Avoid keys unless you need to preserve state, reorder items, or access widget state.
+  - Overusing keys (especially `GlobalKey`) can hurt performance and break widget optimizations.
+  - Do not use `UniqueKey` in lists unless you want every item to be treated as new on each rebuild (loses state).
+
+- **Use Cases**:
+  - Optimizing `ListView` performance (with `ValueKey` or `ObjectKey`)
+  - Maintaining state during item reordering
+    ```dart
+    ReorderableListView(
+      onReorder: ...,
+      children: items.map((item) => ListTile(
+        key: ValueKey(item.id),
+        title: Text(item.name),
+      )).toList(),
+    )
+    ```
+  - Accessing widget state (`GlobalKey` for forms, scaffold, or navigation)
 
 ---
 
@@ -56,21 +139,6 @@ extension CapExtension on String {
 - **Command**: `flutter gen-l10n`
 - **Pluralization**: `Intl.plural(...)`
 - **Challenges**: Syncing `.arb` files, key naming, malformed JSON.
-
----
-
-## ⚖️ State Management
-
-| Approach     | Pros                                  | Cons                          |
-| ------------ | ------------------------------------- | ----------------------------- |
-| Provider     | Simple, official, beginner-friendly   | Not scalable alone            |
-| Riverpod     | Compile-safe, declarative, testable   | Learning curve                |
-| BLoC         | Structured, scalable, widely used     | Boilerplate-heavy             |
-| Redux        | Predictable, unidirectional           | Verbose, outdated for Flutter |
-
-- **Decision Factors**: Team experience, app complexity, familiarity.
-- **For junior teams**: Prefer Provider or Riverpod.
-- **Avoid**: BLoC/Redux unless team is trained.
 
 ---
 
