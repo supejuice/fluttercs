@@ -804,124 +804,103 @@ ThemeData(
 
 ## Error Reporting Framework
 
-A robust error reporting framework helps you detect, log, and respond to errors in production and development. Here’s how to build one for Flutter:
+A robust error reporting framework helps you detect, log, and respond to errors in production and development. Here’s a unified approach for Flutter:
 
-### 1. Error Capture and Logging
+### Error Capture, Logging, and Reporting
 
-- **Global Error Handling:**  
-  Set up global error handlers to catch uncaught exceptions in both Flutter and Dart zones.
+Set up global error handlers to catch uncaught exceptions in both Flutter and Dart zones, and centralize reporting via a singleton service. Integrate with third-party services (Sentry, Crashlytics), local logging, and user feedback.
 
-  ```dart
-  void main() {
-    FlutterError.onError = (FlutterErrorDetails details) {
-      FlutterError.presentError(details);
-      ErrorReporter.instance.reportFlutterError(details);
-    };
+**Naming:**  
+`ErrorReporter` is a clear, descriptive name for a centralized error reporting service. Alternatives: `AppErrorReporter`, `ErrorHandler`, or `ErrorService`. Choose based on your project’s naming conventions.
 
-    runZonedGuarded(() {
-      runApp(MyApp());
-    }, (error, stack) {
-      ErrorReporter.instance.reportError(error, stack);
-    });
+**Unified Example:**
+
+```dart
+import 'dart:developer' as developer;
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+// Uncomment if using Sentry or Crashlytics
+// import 'package:sentry_flutter/sentry_flutter.dart';
+// import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
+class ErrorReporter {
+  ErrorReporter._();
+  static final instance = ErrorReporter._();
+
+  // Integrate with Sentry
+  Future<void> reportToSentry(Object error, StackTrace stack) async {
+    // await Sentry.captureException(error, stackTrace: stack);
   }
-  ```
 
-- **Custom Error Reporter:**  
-  Create a singleton service to centralize error reporting.
-
-  ```dart
-  class ErrorReporter {
-    ErrorReporter._();
-    static final instance = ErrorReporter._();
-
-    void reportFlutterError(FlutterErrorDetails details) {
-      // Log locally, send to remote, etc.
-      log(details.exceptionAsString(), stackTrace: details.stack);
-      // Optionally send to Sentry/Crashlytics
-    }
-
-    void reportError(Object error, StackTrace stack) {
-      log(error.toString(), stackTrace: stack);
-      // Optionally send to remote
-    }
+  // Integrate with Crashlytics
+  Future<void> reportToCrashlytics(Object error, StackTrace stack) async {
+    // await FirebaseCrashlytics.instance.recordError(error, stack);
   }
-  ```
 
-### 2. Integration with Third-Party Services
-
-- **Sentry Example:**
-
-  ```dart
-  import 'package:sentry_flutter/sentry_flutter.dart';
-
-  Future<void> main() async {
-    await SentryFlutter.init(
-      (options) => options.dsn = 'YOUR_DSN_HERE',
-      appRunner: () => runApp(MyApp()),
+  // Log to console/DevTools
+  void logError(Object error, StackTrace stack, {String message = ''}) {
+    developer.log(
+      message.isEmpty ? 'Unhandled error' : message,
+      error: error,
+      stackTrace: stack,
+      level: 1000,
+      name: 'app.error',
     );
   }
 
-  // Reporting an error
-  try {
-    // code that might throw
-  } catch (e, stack) {
-    await Sentry.captureException(e, stackTrace: stack);
+  // Log to local file
+  Future<void> logErrorToFile(Object error, StackTrace stack, {String message = ''}) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/error_logs.txt');
+    final logEntry = '${DateTime.now()}: $message\n$error\n$stack\n\n';
+    await file.writeAsString(logEntry, mode: FileMode.append);
   }
-  ```
 
-- **Firebase Crashlytics Example:**
+  // Unified error reporting
+  Future<void> report(Object error, StackTrace stack, {String message = ''}) async {
+    logError(error, stack, message: message);
+    await logErrorToFile(error, stack, message: message);
+    // await reportToSentry(error, stack);
+    // await reportToCrashlytics(error, stack);
+  }
 
-  ```dart
-  import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+  // Share logs with developers
+  Future<void> shareLogs() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/error_logs.txt');
+    if (await file.exists()) {
+      await Share.shareXFiles([XFile(file.path)], text: 'App error logs');
+    }
+  }
+}
 
-  void main() {
-    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+void main() {
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    ErrorReporter.instance.report(details.exception, details.stack ?? StackTrace.current, message: 'FlutterError');
+  };
+
+  runZonedGuarded(() {
     runApp(MyApp());
-  }
+  }, (error, stack) {
+    ErrorReporter.instance.report(error, stack, message: 'ZoneError');
+  });
+}
 
-  // Reporting manually
-  try {
-    // code
-  } catch (e, stack) {
-    FirebaseCrashlytics.instance.recordError(e, stack);
-  }
-  ```
+// Friendly error screen
+ErrorWidget.builder = (FlutterErrorDetails details) {
+  return Center(child: Text('Something went wrong.'));
+};
+```
 
-### 3. Local Logging
+**Best Practices:**
+- Use `ErrorReporter` for all error capture, logging, and reporting.
+- Integrate with third-party services as needed.
+- Store logs locally and provide a UI for users to share logs.
+- Show user-friendly error screens instead of crashes.
 
-- Log errors to local storage or console for debugging.
-- Use packages like `logger` for structured logs.
-
-  ```dart
-  final logger = Logger();
-  logger.e('Error occurred', error, stackTrace);
-  ```
-
-### 4. User Feedback
-
-- Optionally prompt users to submit feedback when a crash occurs.
-- Show friendly error screens instead of app crashes.
-
-  ```dart
-  Widget build(BuildContext context) {
-    return ErrorWidget.builder = (FlutterErrorDetails details) {
-      return Center(child: Text('Something went wrong.'));
-    };
-  }
-  ```
-
-### 5. Best Practices
-
-- **Do:**  
-  - Integrate both global and manual error reporting.
-  - Include stack traces and user context (if privacy allows).
-  - Test error reporting in debug and release modes.
-- **Don't:**  
-  - Swallow exceptions silently.
-  - Log sensitive user data.
-  - Ignore errors in async callbacks.
-
-> **Tip:** Regularly review error dashboards and automate alerts for critical issues.
 
 ## Performance Profiling
 
