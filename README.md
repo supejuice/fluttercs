@@ -1056,25 +1056,142 @@ Flutter provides a rich set of profiling tools to help you analyze, debug, and o
 ## Security
 
 - **Do:** Store secrets in secure storage, use HTTPS, and obfuscate builds.
+  - **Obfuscate builds:** Use Flutter's obfuscation to make reverse engineering harder.  
+    Run with:  
+    ```sh
+    flutter build apk --obfuscate --split-debug-info=/<project-directory>/debug-info
+    flutter build appbundle --obfuscate --split-debug-info=/<project-directory>/debug-info
+    ```
+    - `--obfuscate`: Enables Dart code obfuscation.
+    - `--split-debug-info`: Stores symbol files for stack trace deobfuscation.
+    - Keep the debug info files safe for crash analysis.
 - **Don't:** Log sensitive data or hardcode secrets.
+### Use Secure Storage
+
+Use secure storage (e.g., `FlutterSecureStorage`) in your **data layer** or **infrastructure layer** for handling sensitive data such as tokens, credentials, or secrets. Access it via a repository or service class, not directly from UI widgets. This separation improves testability, security, and maintainability.
+
+**Example: Secure Key-Value Storage Service (Singleton, Multi-Key Support)**
+
 ```dart
-final storage = FlutterSecureStorage();
-await storage.write(key: 'token', value: 'abc');
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class SecureStorageService {
+  SecureStorageService._();
+  static final SecureStorageService instance = SecureStorageService._();
+
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
+  // Save a value for a given key
+  Future<void> save(String key, String value) async {
+    await _storage.write(key: key, value: value);
+  }
+
+  // Save multiple key-value pairs
+  Future<void> saveAll(Map<String, String> values) async {
+    for (final entry in values.entries) {
+      await _storage.write(key: entry.key, value: entry.value);
+    }
+  }
+
+  // Read a value for a given key
+  Future<String?> read(String key) async {
+    return await _storage.read(key: key);
+  }
+
+  // Read multiple values by keys
+  Future<Map<String, String?>> readAllByKeys(List<String> keys) async {
+    final result = <String, String?>{};
+    for (final key in keys) {
+      result[key] = await _storage.read(key: key);
+    }
+    return result;
+  }
+
+  // Delete a value for a given key
+  Future<void> delete(String key) async {
+    await _storage.delete(key: key);
+  }
+
+  // Delete multiple keys
+  Future<void> deleteAllByKeys(List<String> keys) async {
+    for (final key in keys) {
+      await _storage.delete(key: key);
+    }
+  }
+
+  // Read all key-value pairs
+  Future<Map<String, String>> readAll() async {
+    return await _storage.readAll();
+  }
+
+  // Delete all keys
+  Future<void> deleteAll() async {
+    await _storage.deleteAll();
+  }
+}
 ```
+
+- Use this singleton service in your authentication repository, API client, or anywhere sensitive key-value storage is needed.
+- Supports saving, reading, and deleting multiple key-value pairs.
+- Inject or access via `SecureStorageService.instance` (e.g., with Provider, GetIt, or directly).
+- Avoid direct storage access in presentation/UI code.
+- Store and retrieve multiple keys (e.g., access token, refresh token, userId) as needed.
 
 ## Code Generation
 
 Automate repetitive code using tools like `build_runner`, `Freezed`, and `JsonSerializable`.
 
+### How to Automate Code Generation
+
+- **Add dependencies** in your `pubspec.yaml`:
+  ```yaml
+  dependencies:
+    freezed_annotation: ^2.0.0
+    json_annotation: ^4.0.0
+
+  dev_dependencies:
+    build_runner: ^2.0.0
+    freezed: ^2.0.0
+    json_serializable: ^6.0.0
+  ```
+
+- **Annotate your models**:
+  ```dart
+  import 'package:freezed_annotation/freezed_annotation.dart';
+
+  part 'user.freezed.dart';
+  part 'user.g.dart';
+
+  @freezed
+  class User with _$User {
+    const factory User({required String id, required String name}) = _User;
+    factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  }
+  ```
+
+- **Run code generation**:
+  - One-time/manual:  
+    ```sh
+    flutter pub run build_runner build --delete-conflicting-outputs
+    ```
+  - Watch mode (auto-regenerates on file changes):  
+    ```sh
+    flutter pub run build_runner watch --delete-conflicting-outputs
+    ```
+
+- **Automate in CI/CD**:
+  - Add the build_runner command to your CI pipeline (e.g., GitHub Actions, Codemagic) to ensure generated files are always up to date.
+
+- **Best Practices**:
+  - Always run code generation after changing annotated files.
+  - Use watch mode during development for instant updates.
+  - Commit generated files if required by your team/project.
+  - Add a pre-commit hook (e.g., with [pre-commit](https://pre-commit.com/) or a git hook script) to run code generation before each commit.
+
+> **Tip:** Use `build_runner watch` during development to automatically regenerate code as you edit your models, ensuring your generated files are always in sync with your source code.
+
 - **Do:** Use for models, DI, and unions.
 - **Don't:** Edit generated files manually.
-```dart
-@freezed
-class User with _$User {
-  const factory User({required String id, required String name}) = _User;
-  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
-}
-```
 
 ## Localization and Accessibility
 
