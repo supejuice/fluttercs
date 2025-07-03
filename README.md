@@ -1,46 +1,36 @@
-# Flutter Cheat sheet
+# Flutter Cheat Sheet
+
+A comprehensive guide for Flutter development, covering fundamentals, architecture, state management, UI/UX, API integration, performance, testing, and best practices.
+
 ---
 
 ## 🔧 Flutter Fundamentals
 
-### 1. Stateless vs Stateful Widgets
+### Stateless vs Stateful Widgets
 
-* **StatelessWidget**:
+- **StatelessWidget**: Immutable, UI does not depend on state changes. Rebuilds only when parent changes.  
+  _Example_: Static content (splash screen, about page).
+- **StatefulWidget**: Mutable via `State` class, UI depends on dynamic data. Lifecycle methods: `initState`, `didUpdateWidget`, `dispose`.  
+  _Example_: Forms, toggles, dynamic content.
 
-  * Immutable.
-  * UI doesn't depend on state changes.
-  * Rebuilds only when parent changes.
-  * Example: Static content like splash screen or about page.
-
-* **StatefulWidget**:
-
-  * Mutable via `State` class.
-  * UI depends on dynamic data (user input, timers).
-  * Lifecycle methods available: `initState`, `didUpdateWidget`, `dispose`.
-  * Example: Form inputs, toggles, dynamic content.
-
-**Choose based on dynamicity of content and interaction requirements.**
+> **Tip:** Choose based on content dynamicity and interaction needs.
 
 ---
 
-### 2. Keys
+### Keys
 
-* **Purpose**: Retain widget identity across rebuilds.
-* **Types**:
-
-  * `Key` (base), `ValueKey`, `ObjectKey`, `UniqueKey`, `GlobalKey`.
-
-**Use Cases**:
-
-* Optimizing ListView performance.
-* Maintaining state during item reordering.
-* `GlobalKey` for accessing widget state (e.g., forms).
+- **Purpose**: Retain widget identity across rebuilds.
+- **Types**: `Key`, `ValueKey`, `ObjectKey`, `UniqueKey`, `GlobalKey`.
+- **Use Cases**:  
+  - Optimizing `ListView` performance  
+  - Maintaining state during item reordering  
+  - Accessing widget state (`GlobalKey` for forms)
 
 ---
 
-### 3. Extension Methods
+### Extension Methods
 
-* **Add new functionality to existing classes** without subclassing.
+Add new functionality to existing classes without subclassing.
 
 ```dart
 extension CapExtension on String {
@@ -48,59 +38,39 @@ extension CapExtension on String {
 }
 ```
 
-* **Benefits**:
-
-  * Improves readability.
-  * Keeps utility functions near relevant types.
+- **Benefits**: Improves readability, keeps utilities near relevant types.
 
 ---
 
-### 4. `isMounted`
+### `isMounted`
 
-* Property in `State` objects to check if widget is in tree.
-* **Avoids**: `setState() called after dispose()` exception.
-* **Best Practice**: Check `if (mounted)` before calling `setState` in async callbacks.
+- Property in `State` objects to check if widget is in the tree.
+- Prevents `setState()` after `dispose()`.
+- **Best Practice**: Check `if (mounted)` before calling `setState` in async callbacks.
 
 ---
 
-### 5. Localization (`l10n`)
+### Localization (`l10n`)
 
-* **Tools**: `flutter_localizations`, `intl`, `.arb` files.
-* **Command**: `flutter gen-l10n`
-* **Pluralization**: Use `Intl.plural(...)`
-
-**Challenges**:
-
-* Keeping .arb files in sync.
-* Misnamed keys or malformed JSON.
+- **Tools**: `flutter_localizations`, `intl`, `.arb` files.
+- **Command**: `flutter gen-l10n`
+- **Pluralization**: `Intl.plural(...)`
+- **Challenges**: Syncing `.arb` files, key naming, malformed JSON.
 
 ---
 
 ## ⚖️ State Management
 
-### Approaches:
-
 | Approach     | Pros                                  | Cons                          |
 | ------------ | ------------------------------------- | ----------------------------- |
-| **Provider** | Simple, official, great for beginners | Not scalable alone            |
-| **Riverpod** | Compile-safe, declarative, testable   | Learning curve                |
-| **BLoC**     | Structured, scalable, widely used     | Boilerplate-heavy             |
-| **Redux**    | Predictable, unidirectional           | Verbose, outdated for Flutter |
+| Provider     | Simple, official, beginner-friendly   | Not scalable alone            |
+| Riverpod     | Compile-safe, declarative, testable   | Learning curve                |
+| BLoC         | Structured, scalable, widely used     | Boilerplate-heavy             |
+| Redux        | Predictable, unidirectional           | Verbose, outdated for Flutter |
 
-**Decision Factors**:
-
-* Team experience
-* App complexity
-* Developer familiarity
-
-**For junior teams**: Prefer Provider or Riverpod.
-**Avoid**: BLoC/Redux unless training is given.
-
-**When to avoid your preferred method?**
-
-* When team lacks experience with it.
-* When rapid prototyping is needed.
-* If debugging complexity outweighs benefits.
+- **Decision Factors**: Team experience, app complexity, familiarity.
+- **For junior teams**: Prefer Provider or Riverpod.
+- **Avoid**: BLoC/Redux unless team is trained.
 
 ---
 
@@ -108,27 +78,22 @@ extension CapExtension on String {
 
 ### Responsive Layouts
 
-- Use layout widgets: `LayoutBuilder`, `MediaQuery`, `FractionallySizedBox`, `Flexible`.
-- Responsive packages: `flutter_screenutil`, `responsive_builder`, `sizer`.
+- Use: `LayoutBuilder`, `MediaQuery`, `FractionallySizedBox`, `Flexible`.
+- Packages: `flutter_screenutil`, `responsive_builder`, `sizer`.
 - Design adaptive layouts for tablets and phones.
 
----
-
 **MediaQuery rebuilds:**  
-A widget only rebuilds when it reads an inherited widget (like `MediaQuery`) in its build method *and* that data changes (e.g., screen resize, orientation). If you don’t read `MediaQuery`, your widget won’t rebuild on size changes.
+Widgets rebuild only if they read `MediaQuery` and the data changes (e.g., orientation).
 
-**Example: Responsive Grid with `LayoutBuilder`**
+**Responsive Grid Example:**
+
 ```dart
 LayoutBuilder(
   builder: (context, constraints) {
     int columns = 1;
-    if (constraints.maxWidth >= 1200) {
-      columns = 4;
-    } else if (constraints.maxWidth >= 800) {
-      columns = 3;
-    } else if (constraints.maxWidth >= 600) {
-      columns = 2;
-    }
+    if (constraints.maxWidth >= 1200) columns = 4;
+    else if (constraints.maxWidth >= 800) columns = 3;
+    else if (constraints.maxWidth >= 600) columns = 2;
     return GridView.count(
       crossAxisCount: columns,
       children: List.generate(20, (index) => Card(child: Text('Item $index'))),
@@ -139,37 +104,26 @@ LayoutBuilder(
 
 ---
 
-**ConstrainedBox**  
-Lets you set min/max constraints (not just fixed width/height):
+**ConstrainedBox**: Set min/max constraints.
+
 ```dart
 ConstrainedBox(
   constraints: BoxConstraints(
-    minWidth: 100,
-    maxWidth: 200,
-    minHeight: 50,
-    maxHeight: 100,
+    minWidth: 100, maxWidth: 200, minHeight: 50, maxHeight: 100,
   ),
   child: YourWidget(),
 )
 ```
-Or use `BoxConstraints.tightFor` for fixed size:
-```dart
-ConstrainedBox(
-  constraints: BoxConstraints.tightFor(height: 20),
-);
-```
 
-**SizedBox**  
-- Fixes width/height or acts as spacing (when no child).
+**SizedBox**: Fixes width/height or acts as spacing.
 
 ---
 
 **Flexible vs Expanded**
-- `Expanded(child: ...)` is shorthand for `Flexible(fit: FlexFit.tight, child: ...)`.
-- `Flexible(flex: 2, child: ...)` by default uses `FlexFit.loose`:
-  - The child can take up to 2 parts of available space, but only uses what it needs.
 
-**Example:**
+- `Expanded(child: ...)` = `Flexible(fit: FlexFit.tight, child: ...)`
+- `Flexible(flex: 2, child: ...)` uses `FlexFit.loose` by default.
+
 ```dart
 Row(
   children: [
@@ -178,17 +132,13 @@ Row(
   ],
 );
 ```
-- Here, the `Text` stays small, and the `Container` is 50 pixels wide, not double the space, because of `FlexFit.loose`.
 
-**To force expansion with flex:**  
-Use `Flexible(flex: 2, fit: FlexFit.tight, child: ...)`  
-or simply:  
-`Expanded(flex: 2, child: ...)`
-**FractionallySizedBox**
+- To force expansion: `Flexible(flex: 2, fit: FlexFit.tight, child: ...)` or `Expanded(flex: 2, child: ...)`
 
-A core Flutter widget that sizes its child relative to its parent using `widthFactor` and `heightFactor`.
+---
 
-**Syntax:**
+**FractionallySizedBox**: Sizes child relative to parent.
+
 ```dart
 FractionallySizedBox(
   widthFactor: 0.8,  // 80% of parent width
@@ -199,533 +149,443 @@ FractionallySizedBox(
 
 ---
 
-**sizer**
+**Sizer**: Sizing widgets as a percentage of the screen.
 
-A simple package for sizing widgets as a percentage of the screen.
-
-- Extensions: `.w`, `.h`, `.sp`
-
-**Example:**
 ```dart
 Text('Hello', style: TextStyle(fontSize: 12.sp));
 Container(height: 20.h, width: 50.w);
 ```
 
-**Limitations:**
-
-- Does not guarantee pixel-perfect scaling to match original designs
-- Limited control over padding and margin scaling
-- Not a full "design-to-device" adaptation solution
+- **Limitations**: Not pixel-perfect, limited padding/margin scaling.
 
 ---
 
-**flutter_screenutil**
+**flutter_screenutil**: Advanced scaling based on design size.
 
-A more advanced package for scaling UI based on a specific design reference size.
-
-**Usage:**
 ```dart
 ScreenUtilInit(
   designSize: Size(360, 690),
   builder: () => MyApp(),
 )
-```
-Use `.w`, `.h`, `.r`, `.sp` for scaling:
-```dart
-Container(width: 100.w, height: 50.h); // based on 360x690 design
+Container(width: 100.w, height: 50.h);
 Text("Hello", style: TextStyle(fontSize: 14.sp));
 ```
 
-**Benefits:**
+- **Benefits**: Precise scaling, supports paddings/margins/border radii.
 
-- Maintains UI fidelity across devices with precise scaling
-- Scales paddings, margins, and border radii using `.r`
-- Provides fallback defaults and device detection
+---
 
 **Animations**
 
-* **Implicit**: `AnimatedContainer`, `AnimatedOpacity`
-* **Explicit**: `AnimationController`, `Tween`, `AnimationBuilder`
-* **Transitions**: `PageRouteBuilder`, `Hero`, `FadeTransition`, `SlideTransition`
-* **Debug Performance**: DevTools timeline, `TickerMode`, frame budget awareness.
+- **Implicit**: `AnimatedContainer`, `AnimatedOpacity`
+- **Explicit**: `AnimationController`, `Tween`, `AnimationBuilder`
+- **Transitions**: `PageRouteBuilder`, `Hero`, `FadeTransition`, `SlideTransition`
+- **Debug**: DevTools timeline, `TickerMode`
 
 ---
 
 ## 🔌 API Integration
 
+### Authorization
+
+- **Access Token**: Short-lived, sent with every request, stored in memory/secure storage.
+- **Refresh Token**: Long-lived, used to get new access tokens, stored securely.
+
+| Token Type    | Analogy                      |
+|---------------|-----------------------------|
+| Access Token  | Room key card (limited time)|
+| Refresh Token | Passport + reissue form     |
+
+- **Separation**: Improves security, allows session rotation, scalable backend.
+
+---
+
+**Login Endpoint**
+
+- Accepts credentials, issues tokens, limits attempts, hashes passwords, logs IP/user agent.
+
+**Refresh Endpoint**
+
+- Accepts only valid refresh tokens, rotates on use, blocks reuse, can bind to device/IP, expires after set period.
+
+**Token Structure**
+
+| Property         | Access Token        | Refresh Token                |
+|------------------|--------------------|------------------------------|
+| Format           | JWT or opaque      | Opaque (preferred)           |
+| Storage          | Memory/secure      | Secure only                  |
+| Contains         | Claims             | UUID only                    |
+| Signed           | Yes                | Preferably yes               |
+
+---
+
 ### Networking
 
-* **Libraries**: `http`, `Dio`, `Chopper`
-* **Layering**:
+**Base Configuration**
 
-  * Data Layer (API services)
-  * Domain Layer (Use Cases)
-  * Presentation Layer (Widgets/BLoC)
-* **Error Handling**: Dio interceptors, sealed result classes
+```dart
+final dio = Dio(BaseOptions(
+  baseUrl: 'https://api.example.com/v1',
+  connectTimeout: Duration(seconds: 10),
+  receiveTimeout: Duration(seconds: 15),
+  headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+));
+```
+
+**JWT Auth Interceptor**
+
+```dart
+dio.interceptors.add(InterceptorsWrapper(
+  onRequest: (options, handler) {
+    final token = yourTokenStorage.getAccessToken();
+    if (token != null) options.headers['Authorization'] = 'Bearer $token';
+    return handler.next(options);
+  },
+));
+```
+
+**Centralized Error Handling**
+
+```dart
+dio.interceptors.add(InterceptorsWrapper(
+  onError: (DioError err, handler) async {
+    if (err.response?.statusCode == 401) {
+      await storage.clear();
+      navigatorKey.currentState?.pushNamedAndRemoveUntil('/login', (r) => false);
+    }
+    return handler.next(err);
+  },
+));
+```
+
+**Retry on Failure**
+
+```dart
+dio.interceptors.add(
+  RetryInterceptor(
+    dio: dio,
+    retries: 3,
+    retryDelays: [Duration(seconds: 1), Duration(seconds: 2)],
+    retryEvaluator: (error) => error.type != DioExceptionType.cancel,
+  ),
+);
+```
+
+**File Upload**
+
+```dart
+final formData = FormData.fromMap({
+  'file': await MultipartFile.fromFile(filePath, filename: 'image.jpg'),
+});
+final response = await dio.post('/upload', data: formData);
+```
+
+**Caching**
+
+```dart
+options.headers['Cache-Control'] = 'public, max-age=3600';
+```
+
+**Request Cancellation**
+
+```dart
+final cancelToken = CancelToken();
+dio.get('/longrequest', cancelToken: cancelToken);
+cancelToken.cancel("User navigated away");
+```
+
+**Logging (Debug Only)**
+
+```dart
+dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
+```
+
+**Sample GET with Query Params**
+
+```dart
+final response = await dio.get('/users', queryParameters: {'page': 1, 'limit': 20});
+```
+
+**Timeout Settings**
+
+```dart
+dio.get('/slow', options: Options(receiveTimeout: Duration(seconds: 5)));
+```
+## Performance Optimization
+
+- Prefer `const` constructors for widgets that do not change, to reduce rebuilds.
+- Use `RepaintBoundary` to isolate parts of the widget tree that update frequently, minimizing unnecessary repaints.
+- Debounce or throttle user input (e.g., search fields) to avoid excessive rebuilds or API calls.
+- Profile and detect performance issues using Flutter DevTools and `debugPrintBuild()`.
+
+**Example: Using const and RepaintBoundary**
+
+```dart
+class MyWidget extends StatelessWidget {
+  const MyWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: const Text('Static content'),
+    );
+  }
+}
+```
+
+- Minimize heavy work in `initState`. For expensive initialization, use `FutureBuilder` or deferred loading.
+- Optimize asset sizes and use compressed images.
 
 ---
 
-## 📈 Performance Optimization
+## Flutter Architecture
 
-### Strategies:
+- Use `InheritedWidget` for low-level dependency injection. Most state management solutions (like Provider) build on this.
+- Common patterns: MVVM (with Provider or Riverpod), Clean Architecture (separating domain, data, and presentation layers).
+- Modularize code by features or layers. Extract shared UI components and utilities into separate packages.
+- Navigation:
+  - Navigator 1.0: Imperative, push/pop routes.
+  - Navigator 2.0: Declarative, supports deep linking and complex flows. Use packages like `go_router`.
 
-* Use `const` widgets where possible.
-* Avoid rebuilding large trees unnecessarily.
-* Use `RepaintBoundary` to isolate re-renders.
-* Debounce/throttle user input.
-
-### Detection:
-
-* Use `Flutter DevTools` (Rebuild profiler, Timeline).
-* Check widget rebuilds with `debugPrintBuild()`.
-
-### Startup Time:
-
-* Minimize `initState` work.
-* Use deferred loading for heavy widgets.
-* Optimize asset loading.
-
----
-
-## ⚙️ Flutter Architecture
-
-### InheritedWidget
-
-* Low-level dependency injection.
-* Used by `Provider`, `Theme.of()`, `MediaQuery.of()`.
-* Used when child widgets need access to ancestor data.
-
-### Patterns Used:
-
-* **MVVM**: With Provider or Riverpod.
-* **Clean Architecture**: Domain-driven separation.
-* **MVC**: Rare in modern Flutter.
-
-### Modularization
-
-* Feature-first or layer-based packages.
-* Shared module for design system/constants.
-* Handle dependencies using DI frameworks.
-
-### Navigation
-
-* **Navigator 1.0**: Imperative.
-* **Navigator 2.0**: Declarative (used by `go_router`).
-* **go\_router**:
+**Example: go_router setup**
 
 ```dart
 final router = GoRouter(
   routes: [
-    GoRoute(path: '/home', builder: (context, state) => HomePage()),
+    GoRoute(
+      path: '/home',
+      builder: (context, state) => HomePage(),
+    ),
   ],
 );
 ```
 
-* Benefits: Deep linking, guards, declarative structure.
+---
+
+## Async Programming
+
+- Use `Future` for single async results, `Stream` for multiple events.
+- Bind async data to UI with `FutureBuilder` and `StreamBuilder`.
+
+**Example: FutureBuilder**
+
+```dart
+FutureBuilder<int>(
+  future: fetchValue(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return CircularProgressIndicator();
+    } else if (snapshot.hasError) {
+      return Text('Error: ${snapshot.error}');
+    }
+    return Text('Value: ${snapshot.data}');
+  },
+)
+```
 
 ---
 
-## ⏳ Async Programming
+## Native Integration
 
-### Dart Constructs:
+- Use `MethodChannel` to call platform-specific code (Android/iOS) from Dart.
+- Use `PlatformView` to embed native UI components.
+- Use FFI (Foreign Function Interface) for calling native C/C++ code.
+- Handle permissions and platform-specific testing carefully.
 
-* `Future`: For one-time async results.
-* `Stream`: For multiple async events (like WebSockets).
-* `FutureBuilder`, `StreamBuilder`: For UI binding.
+**Example: MethodChannel**
 
----
+```dart
+static const platform = MethodChannel('samples.flutter.dev/battery');
 
-## 📱 Native Integration
-
-* **MethodChannels**: Bridge between Dart and platform code.
-* **PlatformView**: Embed native views.
-* **FFI**: For native C/C++ interop.
-* **Challenges**: Permissions, testing, maintenance.
-
----
-
-## ❌ Error Handling
-
-* Wrap async code in `try/catch`.
-* Use `Either` / `Result` types for functional error propagation.
-* Show errors with `SnackBar`, `Dialogs`, or error screens.
+Future<void> getBatteryLevel() async {
+  final int batteryLevel = await platform.invokeMethod('getBatteryLevel');
+}
+```
 
 ---
 
-## 🧪 Dependency Injection
+## Error Handling
 
-### Tools:
+- Wrap async code in `try/catch` blocks.
+- Use types like `Either` or `Result` for functional error handling.
+- Show errors to users with `SnackBar`, dialogs, or dedicated error screens.
 
-* **GetIt**: Service locator.
-* **Provider**: Scoped injection.
-* **Riverpod**: Declarative, better scoping and testing.
+**Example: try/catch**
 
-### Scoped DI:
-
-* Provide different instances using `MultiProvider`, `ScopedProvider`.
-* Example: AuthService at root, user-specific service deeper.
-
-### Refactoring for DI:
-
-* Extract dependencies to constructor params.
-* Replace singletons with injectable services.
-* Test by mocking dependencies.
+```dart
+try {
+  final data = await fetchData();
+} catch (e) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+}
+```
 
 ---
 
-## 🌍 Localization & Accessibility
+## Dependency Injection
 
-* **Localization**: `.arb` files, `flutter_localizations`, `intl`.
-* **Accessibility**:
+- Use GetIt for service locator pattern, Provider or Riverpod for scoped dependency injection.
+- Prefer passing dependencies via constructors for testability.
+- Use `MultiProvider` or `ProviderScope` for grouping dependencies.
 
-  * `Semantics` widget.
-  * Label images with `alt`.
-  * Avoid hardcoded sizes.
-  * Test with screen readers.
+**Example: GetIt registration**
 
----
-
-## 🧪 Testing & Quality
-
-### Testing Pyramid:
-
-* **Unit Tests**: Logic, use cases.
-* **Widget Tests**: UI widgets, user interactions.
-* **Integration Tests**: End-to-end scenarios.
-
-### Tools:
-
-* `flutter_test`, `mockito`, `bloc_test`, `integration_test`
-
-### CI/CD:
-
-* **GitHub Actions**, **Bitrise**, **Codemagic**.
-* Stages: Lint -> Build -> Test -> Release.
-
-### Static Analysis:
-
-* `flutter analyze`, `dart analyze`, `very_good_analysis`, `custom_lint`
-
-### Linting:
-
-* Use `.analysis_options.yaml`.
-* Auto-formatting via IDE or CLI.
-
-### Code Quality
-
-* Code reviews: Check for patterns, state separation, testability.
-* Static analysis: Lint rules and warnings.
-* Tools: `dart_code_metrics`, `SonarQube`, `Danger`.
-
-### Accessibility Testing
-
-* Test with screen readers and accessibility audit tools.
-* Ensure contrast, tap targets, focusable widgets.
+```dart
+final getIt = GetIt.instance;
+getIt.registerSingleton<ApiService>(ApiServiceImpl());
+```
 
 ---
 
-## 📦 Flutter Packages
+## Localization and Accessibility
 
-* `flutter_svg`, `fl_chart`, `cached_network_image`, `riverpod`, `hooks_riverpod`, `lottie`, `go_router`, `get_it`
+- Use `.arb` files, `flutter_localizations`, and `intl` for localization.
+- For accessibility, use the `Semantics` widget, label images, avoid hardcoded sizes, and test with screen readers.
 
-**Evaluate**:
+**Example: Semantics**
 
-* Maintenance status
-* Community support
-* License
-* Complexity vs benefit
-
----
-
-## 📚 Version Control & Environments
-
-### Git Best Practices
-
-* **Branching**:
-
-  * GitFlow: `main`, `develop`, `feature/*`
-  * Trunk-based: single main branch + short-lived branches
-
-* **Commits**: Use semantic messages (`feat:`, `fix:`)
-
-* **PRs**: Short, reviewed, linked to tasks
-
-### Environments
-
-* Use `.env`, `flutter_dotenv`, or `flavors` (dev, staging, prod).
-* Feature flags via remote config or in-code switches.
+```dart
+Semantics(
+  label: 'Play button',
+  child: Icon(Icons.play_arrow),
+)
+```
 
 ---
 
-## 🧠 Dart Language Proficiency
+## Testing and Quality
 
-### Language Features:
+- Write unit, widget, and integration tests.
+- Use `flutter_test`, `mockito`, `bloc_test`, and `integration_test` packages.
+- Set up CI/CD with GitHub Actions or Codemagic.
+- Enforce static analysis with `flutter analyze` and custom lint rules.
 
-* Null safety, type inference, extension methods.
-* `late`, `required`, `typedef`, mixins.
+**Example: Widget test**
 
-### Error Handling
-
-* Use `try/catch`, custom exceptions.
-* Propagate or wrap with Either/Result.
-
-### Performance Optimization:
-
-* Avoid unnecessary object allocation.
-* Prefer unmodifiable collections for data safety.
-* Understand AOT/JIT and memory profiling.
-
-### Anti-patterns:
-
-* Overusing `setState`.
-* Business logic in widgets.
-* Ignoring async errors.
+```dart
+testWidgets('Counter increments', (tester) async {
+  await tester.pumpWidget(MyApp());
+  await tester.tap(find.byIcon(Icons.add));
+  await tester.pump();
+  expect(find.text('1'), findsOneWidget);
+});
+```
 
 ---
 
-## ✅ Problem Solving
+## Flutter Packages
 
-### Live Coding Practice:
-
-* [Valid Parentheses](https://leetcode.com/problems/valid-parentheses/)
-* [Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters/)
-* [LRU Cache](https://leetcode.com/problems/lru-cache/)
+- Commonly used: `flutter_svg`, `fl_chart`, `cached_network_image`, `riverpod`, `go_router`, `get_it`.
+- Evaluate packages for maintenance, community support, and license.
 
 ---
 
-## 🔍 Flutter Architecture & Framework
+## Version Control and Environments
 
-* **State Management Decisions**:
-
-  * Use Provider for simple state needs and for teams newer to Flutter.
-  * Use Riverpod for safe, modular, testable, and scalable apps.
-  * BLoC is suitable for enterprise-grade apps requiring strict state separation.
-  * Avoid Redux unless working with developers familiar with web/state mutation debugging.
-  * In junior teams, prefer Provider or Riverpod to reduce complexity.
-
-* **Dependency Injection (DI)**:
-
-  * Prefer `get_it` for simple service locator pattern.
-  * Use Riverpod's `ProviderScope` for context-aware DI.
-  * Handle scoped dependencies with nested providers or DI containers.
-  * Testing is easier when using dependency injection—mock services in tests easily.
-  * To refactor legacy code: extract services from constructors and centralize logic into injectable classes.
-
-* **Performance Optimization**:
-
-  * Use `const` constructors.
-  * Avoid unnecessary rebuilds by breaking widgets down and using `shouldRebuild` and `ValueKey`s.
-  * Use DevTools, track jank frames, and diagnose layout overdraws.
-  * Place expensive widgets in `RepaintBoundary`.
-  * Profile build methods that re-run too often.
-
-* **Animations**:
-
-  * Use implicit animations (`AnimatedContainer`, etc.) for simple use cases.
-  * Use `AnimationController`, `Tween`, `AnimationBuilder` for explicit control.
-  * Custom transitions: `PageRouteBuilder`, `SharedAxisTransition` from animations package.
-  * Debug animations using timeline in Flutter DevTools.
+- Use Git with branching strategies (e.g., GitFlow, trunk-based).
+- Use semantic commit messages (`feat:`, `fix:`).
+- Manage environments with `.env` files, `flutter_dotenv`, and build flavors.
 
 ---
 
-## 💡 Dart Proficiency
+## Dart Language Proficiency
 
-* **Key Dart Features**:
-
-  * Null safety, extension methods, `sealed`, `late`, type inference.
-  * Extension methods improve modularity, e.g., `.px`, `.capitalize()` on common types.
-
-* **Error Handling**:
-
-  * Use `try/catch`, `Result` classes, or sealed failure models for robust APIs.
-  * Consider wrapping exceptions in failure models for service layers.
-
-* **Performance**:
-
-  * Profile memory allocations.
-  * Use lazy initializations (`late`) and avoid unintentional list mutations.
-  * Watch for leaks via retained closures or open streams.
+- Use null safety, type inference, extension methods, `late`, `required`, and mixins.
+- Handle errors with `try/catch` and custom exceptions.
+- Optimize performance by avoiding unnecessary allocations and using unmodifiable collections.
 
 ---
 
-## 🧪 Testing & Quality
+## Problem Solving
 
-* **Testing Strategy**:
-
-  * Follow pyramid: 70% unit, 20% widget, 10% integration.
-  * Mock APIs with `mockito`, `mocktail`, or `http/testing`.
-  * Use golden tests for visual regressions.
-
-* **Code Quality**:
-
-  * Enforce `very_good_analysis` or custom `analysis_options.yaml`.
-  * Lint on CI with GitHub Actions, Codemagic, etc.
-
-* **Accessibility**:
-
-  * Use `Semantics`, `ExcludeSemantics`, `MergeSemantics`.
-  * Test with screen readers on Android/iOS.
+- Practice with algorithm problems (e.g., Valid Parentheses, LRU Cache) to improve coding skills.
 
 ---
 
-## 🚀 Project Experience
+## Architecture and Framework
 
-* **Complex Projects**:
-
-  * Modularized architecture using feature-based packages.
-  * Used GoRouter for unified routing with nested paths and deep linking.
-  * Isolated business logic in domain layer using clean architecture.
-
-* **Environment Configs**:
-
-  * Used `flutter_dotenv`, `--dart-define`, build flavors.
-  * Feature flagging via Firebase Remote Config or local toggles.
-
-* **Navigation**:
-
-  * Prefer `go_router` for declarative navigation with nested routes.
-  * Support deep linking via `GoRoute` with `redirect`, `extra`, and `params`.
-  * Modular navigation by defining `routes.dart` per module.
+- Choose state management based on team experience and app complexity.
+- Use dependency injection for testability and modularity.
+- Profile and optimize performance with DevTools.
+- Use implicit animations for simple cases, explicit for complex.
 
 ---
 
-## 📦 CI/CD & Deployment
+## Testing and Quality (Summary)
 
-* **CI/CD**:
-
-  * Codemagic / GitHub Actions pipelines with build, test, and deploy jobs.
-  * Use `fastlane` for iOS and Android builds and Play/App Store submission.
-
-* **Versioning & Releases**:
-
-  * Semantic versioning via `pubspec.yaml`, Fastlane for tagging.
-  * Migrations handled with DB scripts and feature toggles.
-
-* **Store Submissions**:
-
-  * Used staged rollout, monitored via Crashlytics.
-  * Prepared metadata and store listing automation.
+- Aim for a mix of unit, widget, and integration tests.
+- Use mocks for API testing.
+- Enforce code quality with static analysis and CI.
 
 ---
 
-## 🧠 Leadership & Management
+## Project Experience
 
-* **Team Structure**:
-
-  * Organize by features or layers (UI, Domain, Data).
-  * Onboard new devs with starter tasks, code walkthroughs, architecture docs.
-
-* **Disagreements**:
-
-  * Use RFCs or ADRs (Architecture Decision Records).
-  * Encourage pair programming for resolving architectural choices.
-
-* **Team Growth**:
-
-  * Weekly code-along or POC sessions.
-  * Shared internal knowledge base / wiki.
+- Modularize large projects, use GoRouter for navigation, and manage environment configs with `flutter_dotenv` or build flavors.
 
 ---
 
-## 🔄 Dev Practices
+## CI/CD and Deployment
 
-* **Code Reviews**:
-
-  * Check readability, performance, test coverage.
-  * Avoid nitpicking; focus on design patterns, data flow, and testability.
-
-* **Standardization**:
-
-  * Use formatter (`dart format`) and custom lint rules.
-  * Enforce using pre-commit hooks (`pre-commit`, `husky`, etc.).
-
-* **Managing Tech Debt**:
-
-  * Label TODOs with issue references.
-  * Prioritize by impact, and communicate clearly with stakeholders.
+- Automate builds and tests with CI/CD tools.
+- Use semantic versioning and automate store submissions.
 
 ---
 
-## 🧩 Problem Solving
+## Leadership and Management
 
-* **Debugging Performance**:
-
-  * Use `debugProfileBuildsEnabled`, `debugRepaintRainbowEnabled`.
-  * DevTools memory and CPU profiler to find leaks and bottlenecks.
-
-* **Working with Limited Docs**:
-
-  * Dive into source code, GitHub, and community forums.
-  * Build POCs and validate via tests before adoption.
+- Structure teams by feature or layer.
+- Use documentation and code reviews to onboard and grow team members.
 
 ---
 
-## 🧱 Architecture Decisions
+## Dev Practices
 
-* **Key Decisions**:
-
-  * Migrated from deep Provider trees to scoped Riverpod + hooks.
-  * Modularized routing with GoRouter.
-
-* **Multi-Platform Strategy**:
-
-  * UI abstraction: Platform-aware widgets or builders.
-  * Common domain and data logic in core/shared packages.
+- Focus code reviews on readability, performance, and test coverage.
+- Use formatters, custom lint rules, and pre-commit hooks.
+- Track and prioritize technical debt.
 
 ---
 
-## 🔍 Technical Deep Dives
+## Problem Solving (Debugging)
 
-* **Shopping Cart**:
-
-  * State via Riverpod Notifier, persisted in SharedPrefs or SQLite.
-  * UI watches discount state and recomputes total dynamically.
-
-* **Platform Integration**:
-
-  * Used `MethodChannel` for battery, connectivity, permissions.
-  * Validated via integration tests + mocks.
-
-* **Component Libraries**:
-
-  * Shared design system with `ThemeData` overrides.
-  * Custom widgets with flexible APIs, named constructors, and documentation.
+- Use DevTools and `debugProfileBuildsEnabled` for profiling.
+- Read source code and build proof-of-concepts when documentation is limited.
 
 ---
 
-## 🔮 Trends & Vision
+## Architecture Decisions
 
-* **Staying Current**:
-
-  * Follow Flutter Dev YouTube, Flutter Weekly, Medium blogs.
-  * Try beta/dev releases in sandbox apps.
-
-* **Future of Flutter**:
-
-  * Dart Macros and static metaprogramming.
-  * Better Wasm, Impeller engine improvements.
+- Prefer scoped state management (e.g., Riverpod with hooks).
+- Modularize routing and share domain/data logic across platforms.
 
 ---
 
-## 🎭 Situational Handling
+## Technical Deep Dives
 
-* **Quality vs Speed**:
-
-  * Balance MVP delivery with clear refactor plans.
-  * Communicate debt trade-offs to product.
-
-* **Legacy Codebase**:
-
-  * Snapshot current state, gradually replace modules.
-  * Add tests as refactoring progresses.
+- Example: Shopping cart with Riverpod Notifier, persisted in SharedPreferences or SQLite.
+- Use `MethodChannel` for native features.
+- Build shared component libraries for consistent UI.
 
 ---
 
-## ✅ Bonus Practice Links
+## Trends and Vision
 
-* [Valid Parentheses](https://leetcode.com/problems/valid-parentheses/)
-* [Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters/)
-* [LRU Cache](https://leetcode.com/problems/lru-cache/)
-* [Grade Calculator](https://www.rapidtables.com/calc/grade/test-calculator.html)
+- Stay updated with Flutter releases and community resources.
+- Watch for upcoming features like Dart macros and WebAssembly support.
 
+---
 
+## Situational Handling
+
+- Balance quality and speed by planning for refactoring.
+- Refactor legacy code incrementally and add tests.
+
+---
+
+## Bonus Practice Links
+
+- [Valid Parentheses](https://leetcode.com/problems/valid-parentheses/)
+- [Longest Substring Without Repeating Characters](https://leetcode.com/problems/longest-substring-without-repeating-characters/)
+- [LRU Cache](https://leetcode.com/problems/lru-cache/)
+- [Grade Calculator](https://www.rapidtables.com/calc/grade/test-calculator.html)
