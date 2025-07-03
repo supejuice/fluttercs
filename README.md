@@ -791,6 +791,314 @@ final getIt = GetIt.instance;
 getIt.registerSingleton<ApiService>(ApiServiceImpl());
 ```
 
+## Design System Integration
+
+- **Do:** Centralize theme, use design tokens, and enforce consistency.
+- **Don't:** Override theme locally unless necessary.
+```dart
+ThemeData(
+  primaryColor: AppColors.primary,
+  textTheme: AppTextStyles.all,
+)
+```
+
+## Error Reporting Framework
+
+A robust error reporting framework helps you detect, log, and respond to errors in production and development. Here’s how to build one for Flutter:
+
+### 1. Error Capture and Logging
+
+- **Global Error Handling:**  
+  Set up global error handlers to catch uncaught exceptions in both Flutter and Dart zones.
+
+  ```dart
+  void main() {
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      ErrorReporter.instance.reportFlutterError(details);
+    };
+
+    runZonedGuarded(() {
+      runApp(MyApp());
+    }, (error, stack) {
+      ErrorReporter.instance.reportError(error, stack);
+    });
+  }
+  ```
+
+- **Custom Error Reporter:**  
+  Create a singleton service to centralize error reporting.
+
+  ```dart
+  class ErrorReporter {
+    ErrorReporter._();
+    static final instance = ErrorReporter._();
+
+    void reportFlutterError(FlutterErrorDetails details) {
+      // Log locally, send to remote, etc.
+      log(details.exceptionAsString(), stackTrace: details.stack);
+      // Optionally send to Sentry/Crashlytics
+    }
+
+    void reportError(Object error, StackTrace stack) {
+      log(error.toString(), stackTrace: stack);
+      // Optionally send to remote
+    }
+  }
+  ```
+
+### 2. Integration with Third-Party Services
+
+- **Sentry Example:**
+
+  ```dart
+  import 'package:sentry_flutter/sentry_flutter.dart';
+
+  Future<void> main() async {
+    await SentryFlutter.init(
+      (options) => options.dsn = 'YOUR_DSN_HERE',
+      appRunner: () => runApp(MyApp()),
+    );
+  }
+
+  // Reporting an error
+  try {
+    // code that might throw
+  } catch (e, stack) {
+    await Sentry.captureException(e, stackTrace: stack);
+  }
+  ```
+
+- **Firebase Crashlytics Example:**
+
+  ```dart
+  import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
+  void main() {
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+    runApp(MyApp());
+  }
+
+  // Reporting manually
+  try {
+    // code
+  } catch (e, stack) {
+    FirebaseCrashlytics.instance.recordError(e, stack);
+  }
+  ```
+
+### 3. Local Logging
+
+- Log errors to local storage or console for debugging.
+- Use packages like `logger` for structured logs.
+
+  ```dart
+  final logger = Logger();
+  logger.e('Error occurred', error, stackTrace);
+  ```
+
+### 4. User Feedback
+
+- Optionally prompt users to submit feedback when a crash occurs.
+- Show friendly error screens instead of app crashes.
+
+  ```dart
+  Widget build(BuildContext context) {
+    return ErrorWidget.builder = (FlutterErrorDetails details) {
+      return Center(child: Text('Something went wrong.'));
+    };
+  }
+  ```
+
+### 5. Best Practices
+
+- **Do:**  
+  - Integrate both global and manual error reporting.
+  - Include stack traces and user context (if privacy allows).
+  - Test error reporting in debug and release modes.
+- **Don't:**  
+  - Swallow exceptions silently.
+  - Log sensitive user data.
+  - Ignore errors in async callbacks.
+
+> **Tip:** Regularly review error dashboards and automate alerts for critical issues.
+
+## Performance Profiling
+
+Flutter provides a rich set of profiling tools to help you analyze, debug, and optimize your app’s performance. The primary tool is **Flutter DevTools**, which offers multiple tabs for different profiling aspects.
+
+### 1. Flutter DevTools Overview
+
+**How to launch:**  
+- Run your app in debug or profile mode.
+- Execute `flutter pub global activate devtools` (if not already).
+- Start DevTools:  
+  - From terminal: `flutter pub global run devtools`
+  - Or via IDE (VS Code/Android Studio): Click the “Open DevTools” button.
+
+**Connect:**  
+- Use the link printed in the console, or connect via your IDE.
+
+---
+
+### 2. DevTools Tabs and Profiling Techniques
+
+#### **a. Performance Tab**
+
+- **Timeline View:**  
+  - Visualizes frame rendering, UI thread, GPU thread, and async events.
+  - Shows frame rendering times (target: <16ms for 60fps).
+  - **Use:** Identify jank, slow frames, and expensive build/layout/paint phases.
+- **Frame Analysis:**  
+  - Inspect each frame for build, layout, paint, and raster times.
+  - **Highlight:** Frames exceeding the budget are marked in red.
+- **CPU Profiler:**  
+  - Record and analyze CPU samples for Dart code.
+  - **Use:** Find slow functions, heavy computations, and bottlenecks.
+- **User Flows:**  
+  - Record custom user journeys for targeted profiling.
+
+**How to use:**  
+- Click “Record” to capture timeline events.
+- Interact with your app to reproduce issues.
+- Stop recording and analyze the timeline.
+
+---
+
+#### **b. Memory Tab**
+
+- **Heap Snapshots:**  
+  - Take snapshots of memory usage at any point.
+  - **Use:** Compare before/after states to detect leaks.
+- **Memory Allocation:**  
+  - Track live objects, allocations, and garbage collection.
+- **Dart Objects:**  
+  - Inspect instances by type, retainers, and references.
+- **Leaks:**  
+  - Identify objects that are not being disposed.
+
+**How to use:**  
+- Take snapshots before and after navigation or heavy operations.
+- Look for unexpected growth in object counts.
+
+---
+
+#### **c. CPU Profiler Tab**
+
+- **Call Tree & Bottom Up:**  
+  - Visualize CPU time spent in functions.
+  - **Use:** Identify hot spots and optimize slow code.
+- **Profile Recording:**  
+  - Start/stop CPU profiling for specific actions.
+
+---
+
+#### **d. Network Tab**
+
+- **HTTP Traffic:**  
+  - View all HTTP requests/responses, headers, payloads, and timings.
+- **WebSocket:**  
+  - Inspect WebSocket messages.
+- **Use:**  
+  - Debug slow or failed network calls.
+  - Analyze payload sizes and response times.
+
+---
+
+#### **e. Inspector Tab**
+
+- **Widget Tree:**  
+  - Visualize the widget hierarchy in real time.
+- **Layout Explorer:**  
+  - Inspect constraints, sizes, paddings, and flex layouts.
+- **Highlight Repaints:**  
+  - Enable “Repaint Rainbow” to see which widgets repaint.
+- **Use:**  
+  - Debug layout issues, excessive rebuilds, and widget structure.
+
+---
+
+#### **f. Logging Tab**
+
+- **Console Output:**  
+  - View logs, errors, and debug prints.
+- **Filtering:**  
+  - Filter logs by level or content.
+
+---
+
+#### **g. App Size Tab**
+
+- **Size Analysis:**  
+  - Analyze the size of your app’s release build.
+- **Treemap:**  
+  - Visualize which packages, assets, or code contribute most to the binary size.
+- **Use:**  
+  - Identify and reduce bloat.
+
+---
+
+#### **h. Provider/Bloc/Riverpod Tabs (if using)**
+
+- **State Management:**  
+  - Inspect provider/bloc/riverpod state, dependencies, and updates.
+
+---
+
+### 3. Additional Profiling Techniques
+
+- **Profile Mode:**  
+  - Run `flutter run --profile` for near-release performance.
+- **Release Mode:**  
+  - For final performance, use `flutter run --release`.
+- **Widget Rebuild Profiling:**  
+  - Use `debugPrintRebuildDirtyWidgets = true;` to log widget rebuilds.
+- **Repaint Rainbow:**  
+  - Enable in DevTools Inspector to visualize repaints.
+- **Performance Overlay:**  
+  - Add `showPerformanceOverlay: true` in `MaterialApp` for in-app frame stats.
+- **Tracing:**  
+  - Use `Timeline` API for custom event tracing.
+
+---
+
+### 4. Best Practices
+
+- **Do:**  
+  - Profile on real devices, not just emulators.
+  - Use DevTools regularly during development.
+  - Investigate slow frames, memory leaks, and large app sizes.
+- **Don't:**  
+  - Rely solely on debug mode for performance metrics.
+  - Ignore warnings about jank or memory growth.
+
+> **Tip:** Always profile in both profile and release modes, as debug mode does not reflect real-world performance.
+
+
+
+## Security
+
+- **Do:** Store secrets in secure storage, use HTTPS, and obfuscate builds.
+- **Don't:** Log sensitive data or hardcode secrets.
+```dart
+final storage = FlutterSecureStorage();
+await storage.write(key: 'token', value: 'abc');
+```
+
+## Code Generation
+
+Automate repetitive code using tools like `build_runner`, `Freezed`, and `JsonSerializable`.
+
+- **Do:** Use for models, DI, and unions.
+- **Don't:** Edit generated files manually.
+```dart
+@freezed
+class User with _$User {
+  const factory User({required String id, required String name}) = _User;
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+}
+```
+
 ## Localization and Accessibility
 
 - Use `.arb` files, `flutter_localizations`, and `intl` for localization.
