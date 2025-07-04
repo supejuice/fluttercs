@@ -5,7 +5,7 @@ A comprehensive guide for Flutter development, covering fundamentals, architectu
 ## Flutter Fundamentals
 
 ### Stateless vs Stateful Widgets
-___
+
 - **StatelessWidget**: Immutable, UI does not depend on state changes. Rebuilds only when parent changes.  
   _Example_: Static content (splash screen, about page).
 - **StatefulWidget**: Mutable via `State` class, UI depends on dynamic data. Lifecycle methods: `initState`, `didUpdateWidget`, `dispose`.  
@@ -242,7 +242,7 @@ Text("Hello", style: TextStyle(fontSize: 14.sp));
 - **Benefits**: Precise scaling, supports paddings/margins/border radii.
 
 ### Animations
-___
+
 
 Flutter supports both **implicit** and **explicit** animations for smooth, interactive, and visually appealing UI transitions.
 
@@ -451,7 +451,7 @@ class _StaggeredDemoState extends State<StaggeredDemo> with SingleTickerProvider
   Navigator.push(
     context,
     PageRouteBuilder(
-      pageBuilder: (_, __, ___) => NextPage(),
+      pageBuilder: (_, __, ) => NextPage(),
       transitionsBuilder: (_, animation, __, child) =>
         FadeTransition(opacity: animation, child: child),
     ),
@@ -491,16 +491,9 @@ class _StaggeredDemoState extends State<StaggeredDemo> with SingleTickerProvider
 ## API Integration
 
 ### Authorization
-___
 
 - **Access Token**: Short-lived, sent with every request, stored in memory/secure storage.
 - **Refresh Token**: Long-lived, used to get new access tokens, stored securely.
-
-| Token Type    | Analogy                      |
-||--|
-| Access Token  | Room key card (limited time)|
-| Refresh Token | Passport + reissue form     |
-
 - **Separation**: Improves security, allows session rotation, scalable backend.
 
 
@@ -621,7 +614,6 @@ dio.get('/slow', options: Options(receiveTimeout: Duration(seconds: 5)));
 - Prefer `const` constructors for widgets that do not change, to reduce rebuilds.
 - Use `RepaintBoundary` to isolate parts of the widget tree that update frequently, minimizing unnecessary repaints.
 - Debounce or throttle user input (e.g., search fields) to avoid excessive rebuilds or API calls.
-- Profile and detect performance issues using Flutter DevTools and `debugPrintBuild()`.
 
 **Example: Using const and RepaintBoundary**
 
@@ -678,7 +670,7 @@ class MyWidget extends StatelessWidget {
   - Challenges: Requires tooling for dependency management and build orchestration.
 
 > **Tip:** Start with a scalable structure early—even small apps can grow quickly. Use clear naming conventions and documentation for each module or package.
-___
+
 
 ### InheritedWidget
   Use for low-level dependency injection and propagating data down the widget tree. Most higher-level solutions (like Provider, Riverpod) are built on top of it.
@@ -759,7 +751,7 @@ ___
   **Don't:**
   - Mix unrelated features in the same folder.
   - Duplicate code across modules.
-___
+
 ### Navigation
 
 - **Navigator 1.0 (Imperative):**
