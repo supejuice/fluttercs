@@ -244,22 +244,15 @@ Text("Hello", style: TextStyle(fontSize: 14.sp));
 ### Animations
 ___
 
-Flutter supports both **implicit** and **explicit** animations for smooth UI transitions.
+Flutter supports both **implicit** and **explicit** animations for smooth, interactive, and visually appealing UI transitions.
 
-- **Implicit Animations**: Animate property changes automatically.
-  - Widgets: `AnimatedContainer`, `AnimatedOpacity`, `AnimatedAlign`, etc.
-  - **Do:** Use for simple transitions (size, color, opacity).
-  - **Don't:** Use for complex, multi-property, or sequenced animations.
+#### Implicit Animations
 
-- **Explicit Animations**: Full control over animation timing and values.
-  - Widgets: `AnimationController`, `Tween`, `AnimatedBuilder`, `Animation`, etc.
-  - **Do:** Use for complex, coordinated, or custom animations.
-  - **Don't:** Forget to dispose your `AnimationController` to avoid memory leaks.
-
-- **Transitions**: Animate route changes or widget appearance.
-  - Widgets: `PageRouteBuilder`, `Hero`, `FadeTransition`, `SlideTransition`.
-
-- **Debug**: Use Flutter DevTools timeline, `TickerMode` to enable/disable tickers in widget subtrees.
+- **What:** Animate property changes automatically when widget properties change.
+- **Widgets:**  
+  - `AnimatedContainer`, `AnimatedOpacity`, `AnimatedAlign`, `AnimatedPadding`, `AnimatedPositioned`, `AnimatedCrossFade`, `AnimatedDefaultTextStyle`, `AnimatedPhysicalModel`, `AnimatedSwitcher`, etc.
+- **Do:** Use for simple transitions (size, color, opacity, alignment, padding, etc.).
+- **Don't:** Use for complex, multi-property, or sequenced animations.
 
 **Example: Implicit Animation with AnimatedContainer**
 ```dart
@@ -270,23 +263,32 @@ class AnimatedBox extends StatefulWidget {
 
 class _AnimatedBoxState extends State<AnimatedBox> {
   double _size = 100;
+  Color _color = Colors.blue;
+  BorderRadiusGeometry _borderRadius = BorderRadius.circular(8);
 
-  void _toggleSize() {
+  void _toggle() {
     setState(() {
       _size = _size == 100 ? 200 : 100;
+      _color = _color == Colors.blue ? Colors.red : Colors.blue;
+      _borderRadius = _borderRadius == BorderRadius.circular(8)
+          ? BorderRadius.circular(32)
+          : BorderRadius.circular(8);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _toggleSize,
+      onTap: _toggle,
       child: AnimatedContainer(
         width: _size,
         height: _size,
-        color: Colors.blue,
-        duration: Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: _color,
+          borderRadius: _borderRadius,
+        ),
+        duration: Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic,
         child: Center(child: Text('Tap me')),
       ),
     );
@@ -294,16 +296,197 @@ class _AnimatedBoxState extends State<AnimatedBox> {
 }
 ```
 
+**Other Implicit Animation Examples:**
+
+- **AnimatedOpacity**
+  ```dart
+  AnimatedOpacity(
+    opacity: isVisible ? 1.0 : 0.0,
+    duration: Duration(milliseconds: 400),
+    child: YourWidget(),
+  )
+  ```
+- **AnimatedSwitcher**
+  ```dart
+  AnimatedSwitcher(
+    duration: Duration(milliseconds: 300),
+    child: isFirst ? Icon(Icons.star) : Icon(Icons.star_border),
+    transitionBuilder: (child, animation) =>
+      ScaleTransition(scale: animation, child: child),
+  )
+  ```
+
+---
+
+#### Explicit Animations
+
+- **What:** Full control over animation timing, values, and sequences.
+- **Widgets/Classes:**  
+  - `AnimationController`, `Tween`, `CurvedAnimation`, `AnimatedBuilder`, `AnimatedWidget`, `Animation`, `TweenSequence`, `Interval`, `ReverseAnimation`, etc.
+- **Do:** Use for complex, coordinated, or custom animations (multi-property, staggered, chained, physics-based).
+- **Don't:** Forget to dispose your `AnimationController` to avoid memory leaks.
+
+**Example: Explicit Animation with AnimationController and AnimatedBuilder**
+```dart
+class SpinningBox extends StatefulWidget {
+  @override
+  State<SpinningBox> createState() => _SpinningBoxState();
+}
+
+class _SpinningBoxState extends State<SpinningBox> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _rotation;
+  late Animation<Color?> _color;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _rotation = Tween<double>(begin: 0, end: 2 * 3.1416).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _color = ColorTween(begin: Colors.blue, end: Colors.orange).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.rotate(
+          angle: _rotation.value,
+          child: Container(
+            width: 120,
+            height: 120,
+            color: _color.value,
+            child: Center(child: Text('Spin')),
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+**Advanced: Staggered Animation Example**
+```dart
+class StaggeredDemo extends StatefulWidget {
+  @override
+  State<StaggeredDemo> createState() => _StaggeredDemoState();
+}
+
+class _StaggeredDemoState extends State<StaggeredDemo> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _width;
+  late Animation<double> _height;
+  late Animation<Color?> _color;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(duration: Duration(seconds: 2), vsync: this);
+
+    _width = Tween<double>(begin: 50, end: 200).animate(
+      CurvedAnimation(parent: _controller, curve: Interval(0.0, 0.5, curve: Curves.ease)),
+    );
+    _height = Tween<double>(begin: 50, end: 200).animate(
+      CurvedAnimation(parent: _controller, curve: Interval(0.5, 1.0, curve: Curves.ease)),
+    );
+    _color = ColorTween(begin: Colors.green, end: Colors.purple).animate(
+      CurvedAnimation(parent: _controller, curve: Interval(0.0, 1.0)),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          width: _width.value,
+          height: _height.value,
+          color: _color.value,
+        );
+      },
+    );
+  }
+}
+```
+
+---
+
+#### Transitions
+
+- **Route/Page Transitions:**  
+  - `PageRouteBuilder`, `FadeTransition`, `SlideTransition`, `ScaleTransition`, `RotationTransition`, `SizeTransition`, `Hero`.
+- **Hero Animations:**  
+  - Animate shared elements between routes.
+  ```dart
+  Hero(
+    tag: 'profile-pic',
+    child: CircleAvatar(radius: 40, backgroundImage: ...),
+  )
+  ```
+- **Custom Route Transition Example:**
+  ```dart
+  Navigator.push(
+    context,
+    PageRouteBuilder(
+      pageBuilder: (_, __, ___) => NextPage(),
+      transitionsBuilder: (_, animation, __, child) =>
+        FadeTransition(opacity: animation, child: child),
+    ),
+  );
+  ```
+
+---
+
+#### Animation Utilities & Debugging
+
+- **Curves:** Use `Curves` for non-linear motion (e.g., `Curves.easeInOutBack`, `Curves.bounceOut`).
+- **TweenSequence:** Chain multiple tweens for complex effects.
+- **TickerMode:** Enable/disable tickers in widget subtrees for performance.
+- **DevTools Timeline:** Profile animation performance and frame rendering.
+- **AnimatedList/AnimatedGrid:** Animate item insertions/removals in lists/grids.
+
+---
+
+#### Best Practices
+
 **Do:**
 - Use implicit widgets for simple property changes.
-- Always dispose `AnimationController` in `dispose()` when using explicit animations.
-- Use `Hero` for shared element transitions between routes.
+- Use explicit animations for advanced, coordinated, or custom effects.
+- Always dispose `AnimationController` in `dispose()`.
+- Use `Hero` for shared element transitions.
+- Profile animations with DevTools for jank or dropped frames.
+- Use `AnimatedSwitcher` for smooth widget replacements.
 
 **Don't:**
 - Animate too many widgets at once; it can hurt performance.
 - Block the main thread with heavy computations during animations.
+- Forget to use `TickerProvider` (with `SingleTickerProviderStateMixin` or `TickerProviderStateMixin`) for controllers.
 
-> **Tip:** For advanced choreography, use `AnimationController` with `AnimatedBuilder` or `AnimatedWidget` for maximum flexibility.
+> **Tip:** For advanced choreography, use `AnimationController` with `AnimatedBuilder`, `AnimatedWidget`, or `TweenSequence` for maximum flexibility. For physics-based motion, explore `SpringSimulation`, `BouncingScrollSimulation`, or the `flutter_sequence_animation` package.
+
 
 ## API Integration
 
@@ -332,12 +515,12 @@ ___
 
 **Token Structure**
 
-| Property         | Access Token        | Refresh Token                |
-||--||
-| Format           | JWT or opaque      | Opaque (preferred)           |
-| Storage          | Memory/secure      | Secure only                  |
-| Contains         | Claims             | UUID only                    |
-| Signed           | Yes                | Preferably yes               |
+| Property  | Access Token         | Refresh Token         |
+|-----------|---------------------|----------------------|
+| Format    | JWT or opaque       | Opaque (preferred)   |
+| Storage   | Memory/secure       | Secure only          |
+| Contains  | Claims              | UUID only            |
+| Signed    | Yes                 | Preferably yes       |
 
 
 
