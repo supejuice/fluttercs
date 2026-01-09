@@ -40,13 +40,157 @@ A comprehensive guide for Flutter development, covering fundamentals, architectu
     - **Do:** Cancel timers, close streams, and dispose controllers.
     - **Don't:** Call `setState()` here.
 
+
+    ### Listening to Theme Changes
+
+    To respond to theme changes (e.g., light/dark mode) in Flutter, use `Theme.of(context)` inside your widget’s `build` method or listen for changes via `MediaQuery` or `WidgetsBindingObserver`.
+
+    **Example: React to Theme Changes in Build**
+    ```dart
+    @override
+    Widget build(BuildContext context) {
+      final theme = Theme.of(context);
+      final isDark = theme.brightness == Brightness.dark;
+      return Container(
+        color: isDark ? Colors.black : Colors.white,
+        child: Text(
+          isDark ? 'Dark Mode' : 'Light Mode',
+          style: theme.textTheme.bodyLarge,
+        ),
+      );
+    }
+    ```
+
+    **Advanced: Listen to Platform Brightness Changes**
+
+    If you need to react outside of build (e.g., trigger logic), use `WidgetsBindingObserver`:
+
+    ```dart
+    class ThemeListenerWidget extends StatefulWidget {
+      @override
+      State<ThemeListenerWidget> createState() => _ThemeListenerWidgetState();
+    }
+
+    class _ThemeListenerWidgetState extends State<ThemeListenerWidget> with WidgetsBindingObserver {
+      Brightness? _platformBrightness;
+
+      @override
+      void initState() {
+        super.initState();
+        WidgetsBinding.instance.addObserver(this);
+        _platformBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      }
+
+      @override
+      void didChangePlatformBrightness() {
+        setState(() {
+          _platformBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+        });
+      }
+
+      @override
+      void dispose() {
+        WidgetsBinding.instance.removeObserver(this);
+        super.dispose();
+      }
+
+      @override
+      Widget build(BuildContext context) {
+        return Text('Platform brightness: $_platformBrightness');
+      }
+    }
+    ```
+
+    > **Tip:** For most UI updates, just use `Theme.of(context)` in your build method. Use `WidgetsBindingObserver` only for side effects or logic outside the widget tree.
+
+    ### Example: Full StatefulWidget Lifecycle
+    Here’s a more illustrative example for each lifecycle callback, showing a simple counter that demonstrates how state and dependencies change, and how the widget responds:
+    
+    ```dart
+
+    class LifecycleDemo extends StatefulWidget {
+      final String title;
+      const LifecycleDemo({super.key, required this.title});
+
+      @override
+      State<LifecycleDemo> createState() => _LifecycleDemoState();
+    }
+
+    class _LifecycleDemoState extends State<LifecycleDemo> {
+      late TextEditingController _controller;
+      int _counter = 0;
+      String _dependency = "Initial dependency";
+
+      @override
+      void initState() {
+        super.initState();
+        _controller = TextEditingController();
+        _counter = 1; // Demonstrate initialization
+        print('initState: counter=$_counter');
+      }
+
+      @override
+      void didChangeDependencies() {
+        super.didChangeDependencies();
+        // Simulate dependency change
+        _dependency = "Dependency at ${DateTime.now()}";
+        print('didChangeDependencies: $_dependency');
+      }
+
+      @override
+      void didUpdateWidget(covariant LifecycleDemo oldWidget) {
+        super.didUpdateWidget(oldWidget);
+        if (oldWidget.title != widget.title) {
+          print('didUpdateWidget: title changed from "${oldWidget.title}" to "${widget.title}"');
+        }
+      }
+
+      @override
+      void deactivate() {
+        print('deactivate: Widget is being removed from the tree temporarily.');
+        super.deactivate();
+      }
+
+      @override
+      void dispose() {
+        print('dispose: Cleaning up controller.');
+        _controller.dispose();
+        super.dispose();
+      }
+
+      void _incrementCounter() {
+        setState(() {
+          _counter++;
+          print('setState: counter incremented to $_counter');
+        });
+      }
+
+      @override
+      Widget build(BuildContext context) {
+        print('build: counter=$_counter');
+        return Scaffold(
+          appBar: AppBar(title: Text(widget.title)),
+          body: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Text('Counter: $_counter'),
+                Text('Dependency: $_dependency'),
+                TextField(controller: _controller),
+                ElevatedButton(
+                  onPressed: _incrementCounter,
+                  child: const Text('Increment Counter'),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+    ```
+
 > **Tip:** Always pair resource allocation (controllers, streams) in `initState` with cleanup in `dispose()` to prevent memory leaks.
-
-> **Tip:** Choose based on content dynamicity and interaction needs.  
-> Always dispose resources in `dispose()` to prevent memory leaks.
-
-
-
+> **Tip:** Always dispose resources in `dispose()` to prevent memory leaks.
 
 ### Keys
 
